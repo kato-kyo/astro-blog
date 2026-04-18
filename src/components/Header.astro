@@ -15,18 +15,22 @@ import SearchTrigger from "./SearchTrigger.astro";
 ---
 
 <header class="bg-header-bg text-header-text border-b border-header-border">
-  <div class="container-wide flex items-center justify-between min-h-[64px]">
-    <a href="/" class="text-[1.1rem] font-bold tracking-tight text-header-text">
+  <div class="container-wide flex flex-wrap items-center justify-between gap-y-2 min-h-[64px] py-2">
+    <a
+      href="/"
+      class="text-[1.1rem] font-bold tracking-tight text-header-text"
+      aria-label={`${SITE.title} トップへ`}
+    >
       {SITE.authorJa}
     </a>
-    <nav aria-label="主要ナビゲーション" class="flex items-center">
-      <ul class="flex gap-0 m-0 p-0 list-none items-center">
+    <nav aria-label="主要ナビゲーション" class="flex items-center flex-wrap gap-y-1 max-w-full">
+      <ul class="flex flex-wrap gap-x-1 gap-y-1 m-0 p-0 list-none items-center">
         {
           MAIN_NAV.map((item) => (
             <li>
               <a
                 href={item.href}
-                class="block px-5 py-2.5 text-[15px] font-normal text-header-text opacity-90 hover:opacity-100"
+                class="block px-3 md:px-5 py-2 text-[15px] font-normal text-header-text opacity-90 hover:opacity-100"
               >
                 {item.label}
               </a>

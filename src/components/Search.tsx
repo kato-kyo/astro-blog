@@ -215,9 +215,9 @@ export default function Search(_props: SearchProps) {
       aria-labelledby={`${MODAL_ID}-title`}
       id={MODAL_ID}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[10vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 pt-[5vh] sm:pt-[10vh] pb-4 overflow-y-auto"
     >
-      <div className="w-full max-w-2xl bg-bg border border-border rounded-md shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+      <div className="w-full max-w-2xl max-h-[calc(100vh-5rem)] bg-bg border border-border rounded-md shadow-[0_10px_30px_rgba(0,0,0,0.12)] flex flex-col">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -258,7 +258,7 @@ export default function Search(_props: SearchProps) {
           </button>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {indexReady === false && (
             <p className="px-4 py-6 text-sm text-text-muted">
               検索インデックスが見つかりません（`pnpm build` 後に利用可能になります）。
