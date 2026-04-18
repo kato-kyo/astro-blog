@@ -26,15 +26,12 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      # 現在は content/ submodule 未設定のため submodules: false。
-      # 将来 private な content submodule を追加した際は、以下に差し替える:
-      #   with:
-      #     submodules: recursive
-      #     token: ${{ secrets.CONTENT_PAT }}  # private repo 読み取り専用 PAT
+      # content/ は private submodule。CONTENT_PAT が必須。
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: false
+          submodules: recursive
+          token: ${{ secrets.CONTENT_PAT }}
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
