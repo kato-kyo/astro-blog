@@ -1,0 +1,58 @@
+---
+/**
+ * 記事詳細（F-03）。ToC・関連記事は後段で追加。
+ *
+ * ルール:
+ * - `astro:content` は queries/ 経由でのみ使用する（lib-architecture.md）
+ * - render() のみ astro:content から直接 import（CollectionEntry を Astro が消費するため）
+ */
+import { render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { estimateReadingTime } from "../../lib/policies";
+import { listPublishedEntries, toPostMeta } from "../../lib/queries";
+import { isDev } from "../../lib/env";
+import { entryIdToSlug } from "../../lib/domain";
+
+export async function getStaticPaths() {
+  const entries = await listPublishedEntries();
+  return entries.map((entry) => ({
+    params: { slug: entryIdToSlug(entry.id) },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const meta = toPostMeta(entry);
+const readingTime = estimateReadingTime(entry.body ?? "");
+// dev では draft も一覧に出るので、バッジ表示は draft かつ dev のみ。
+// prod では queries 側で draft が除外されているため到達しない。
+const showDraftBadge = isDev && meta.draft;
+---
+
+<BaseLayout title={meta.title} description={meta.description}>
+  <article class="content-prose py-10">
+    <header class="mb-8 pb-4 border-b border-border">
+      <h1 class="text-3xl font-bold leading-snug mb-3">{meta.title}</h1>
+      <div class="flex gap-3 flex-wrap text-xs text-text-muted">
+        <time datetime={meta.publishedAt.toISOString()}>
+          {meta.publishedAt.toLocaleDateString("ja-JP")}
+        </time>
+        <span>|</span>
+        <span>読了時間 {readingTime} 分</span>
+        <span>|</span>
+        <a href={`/categories/${meta.category}/`}>{meta.category}</a>
+        {
+          showDraftBadge && (
+            <span class="px-2 py-0.5 bg-draft-badge text-white rounded-sm font-semibold uppercase text-[0.6875rem]">
+              Draft
+            </span>
+          )
+        }
+      </div>
+    </header>
+    <div class="prose max-w-none">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

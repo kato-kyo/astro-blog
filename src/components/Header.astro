@@ -1,0 +1,31 @@
+---
+/**
+ * サイトヘッダー（GP 風: static・ソリッド背景・nav padding 10px 20px・font-size 15px）。
+ */
+import { SITE } from "../config/site";
+import { MAIN_NAV } from "../config/nav";
+---
+
+<header class="bg-header-bg text-header-text border-b border-header-border">
+  <div class="container-wide flex items-center justify-between min-h-[64px]">
+    <a href="/" class="text-[1.1rem] font-bold tracking-tight text-header-text">
+      {SITE.authorJa}
+    </a>
+    <nav aria-label="主要ナビゲーション">
+      <ul class="flex gap-0 m-0 p-0 list-none items-center">
+        {
+          MAIN_NAV.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="block px-5 py-2.5 text-[15px] font-normal text-header-text opacity-90 hover:opacity-100"
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</header>

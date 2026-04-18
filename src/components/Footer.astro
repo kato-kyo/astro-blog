@@ -1,0 +1,36 @@
+---
+/**
+ * サイトフッター（GP 風: 3-col widget + copyright）。
+ */
+import { SITE } from "../config/site";
+import { FOOTER_NAV } from "../config/nav";
+
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-bg-secondary text-text-secondary border-t border-border mt-16 py-10 text-[0.882rem]">
+  <div class="container-wide">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div>
+        <h3 class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider">About</h3>
+        <p>ソフトウェアエンジニアリングの実践記録。設計・TDD・ツールについて書きます。</p>
+      </div>
+      <div>
+        <h3 class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider">Navigation</h3>
+        <ul class="list-none m-0 p-0 space-y-1">
+          {FOOTER_NAV.map((item) => <li><a href={item.href}>{item.label}</a></li>)}
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider">Connect</h3>
+        <ul class="list-none m-0 p-0 space-y-1">
+          <li><a href="/rss.xml">RSS Feed</a></li>
+          <li><a href={SITE.github} rel="me">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="text-center pt-5 border-t border-border text-text-muted text-[0.824rem]">
+      &copy; {year} {SITE.author}. All rights reserved.
+    </p>
+  </div>
+</footer>

@@ -1,0 +1,33 @@
+---
+/**
+ * ブログ記事一覧（F-02）。ページネーション・サイドバーは後段で追加。
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostListItem from "../../components/PostListItem.astro";
+import { listPublishedPosts } from "../../lib/queries";
+
+const posts = await listPublishedPosts();
+---
+
+<BaseLayout title="Blog" description="技術ブログ記事一覧">
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <h1 class="text-3xl font-bold mb-2">Blog</h1>
+      <p class="text-sm text-text-secondary">
+        ソフトウェアエンジニアリング、設計、ツールに関する実践記録
+      </p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    {
+      posts.length === 0 ? (
+        <p class="text-text-muted">まだ記事がありません。</p>
+      ) : (
+        <div class="max-w-[45rem]">
+          {posts.map((post) => <PostListItem post={post} headingLevel={2} showTags />)}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

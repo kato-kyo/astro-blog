@@ -1,0 +1,170 @@
+/**
+ * astro-blog グローバルスタイル（GeneratePress 系クラシック WordPress ブログ調）
+ * デザイン根拠: docs/design.md §3、docs/generatepress-analysis.md
+ */
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ダークモード: class ベース + OS 追従（BaseLayout の inline script で FOUC 防止） */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* =======================================================================
+ * Design Tokens — GP 風
+ * Tailwind v4 は `--color-*` / `--font-*` を自動で utility に昇格するため、
+ * bg-bg / text-text / font-sans 等として直接利用可能になる。
+ * ======================================================================= */
+@theme {
+  /* --- Font Family --- */
+  --font-sans: "Open Sans", "Noto Sans JP", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "Fira Code", Menlo, Monaco, monospace;
+
+  /* --- Color: Neutral (GP defaults) --- */
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f7f8f9;
+  --color-bg-alt: #f0f0f0;
+  --color-text: #222222;
+  --color-text-secondary: #585858;
+  --color-text-muted: #878787;
+  --color-border: #e5e5e5;
+
+  /* --- Color: Accent (classic blue + underline) --- */
+  --color-accent: #1e73be;
+  --color-accent-hover: #0e4b80;
+  --color-accent-light: #e8f1f9;
+
+  /* --- Color: Header --- */
+  --color-header-bg: #ffffff;
+  --color-header-text: #222222;
+  --color-header-border: #e5e5e5;
+
+  /* --- Color: Semantic --- */
+  --color-success: #16a34a;
+  --color-warning: #ca8a04;
+  --color-error: #dc2626;
+  --color-draft-badge: #f59e0b;
+
+  /* --- Radius: GP 実測 極めて控えめ --- */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+}
+
+/* =======================================================================
+ * Dark Mode Overrides
+ * ======================================================================= */
+.dark {
+  --color-bg: #1a1a1a;
+  --color-bg-secondary: #242424;
+  --color-bg-alt: #2a2a2a;
+  --color-text: #e4e4e4;
+  --color-text-secondary: #b5b5b5;
+  --color-text-muted: #888888;
+  --color-border: #3a3a3a;
+
+  --color-accent: #58a6ff;
+  --color-accent-hover: #79b8ff;
+  --color-accent-light: #1a2636;
+
+  --color-header-bg: #0e1120;
+  --color-header-text: #ffffff;
+  --color-header-border: #0e1120;
+}
+
+/* =======================================================================
+ * Custom layout utilities
+ * ======================================================================= */
+@utility container-wide {
+  max-width: 75rem; /* 1200px */
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@utility content-prose {
+  max-width: 45rem; /* 720px */
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+/* =======================================================================
+ * Base
+ * ======================================================================= */
+html {
+  font-size: 17px; /* GP body */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.65;
+}
+
+/* Classic link styling: 青 + 下線常時 (GP 慣習) */
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+/* Navigation / site title / footer-nav: 下線なし（本文リンクのみ下線が GP 流） */
+header a,
+footer a {
+  text-decoration: none;
+}
+header a:hover,
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* フォーカスリング（accessibility） */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =======================================================================
+ * Prose (typography plugin) — トークン連動 (design.md §3.3)
+ * ======================================================================= */
+.prose {
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-bg-alt);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-quotes: var(--color-text-secondary);
+  --tw-prose-hr: var(--color-border);
+  --tw-prose-th-borders: var(--color-border);
+  --tw-prose-td-borders: var(--color-border);
+}
+.dark .prose {
+  --tw-prose-body: var(--color-text);
+  --tw-prose-headings: var(--color-text);
+  --tw-prose-links: var(--color-accent);
+  --tw-prose-bold: var(--color-text);
+  --tw-prose-code: var(--color-text);
+  --tw-prose-pre-bg: var(--color-bg-alt);
+  --tw-prose-pre-code: var(--color-text);
+  --tw-prose-quotes: var(--color-text-secondary);
+  --tw-prose-hr: var(--color-border);
+  --tw-prose-th-borders: var(--color-border);
+  --tw-prose-td-borders: var(--color-border);
+}

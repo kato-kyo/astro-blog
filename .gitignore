@@ -4,6 +4,7 @@ dist/
 
 # dependencies
 node_modules/
+.pnpm-store/
 
 # Astro generated types / cache
 .astro/

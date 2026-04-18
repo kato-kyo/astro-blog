@@ -1,0 +1,48 @@
+---
+/**
+ * 記事一覧の1項目（GP 風: meta | title | description | tags?）。
+ * トップ・ブログ一覧・タグ別・カテゴリ別の各ページから共通で使用する。
+ */
+import type { PostMeta } from "../lib/domain";
+
+type Props = {
+  post: PostMeta;
+  /** `h2`（一覧ページ）または `h3`（トップの Recent Posts 等） */
+  headingLevel?: 2 | 3;
+  /** タグのバッジ表示を有効にする */
+  showTags?: boolean;
+};
+
+const { post, headingLevel = 2, showTags = false } = Astro.props;
+const Heading = `h${headingLevel}` as const;
+---
+
+<article class="border-b border-border py-6 first:border-t">
+  <div class="text-xs text-text-muted mb-1 flex gap-2">
+    <time datetime={post.publishedAt.toISOString()}>
+      {post.publishedAt.toLocaleDateString("ja-JP")}
+    </time>
+    <span>|</span>
+    <span>{post.category}</span>
+  </div>
+  <Heading class="text-xl font-semibold mb-2 leading-snug">
+    <a href={`/blog/${post.slug}/`} class="text-text hover:text-accent">
+      {post.title}
+    </a>
+  </Heading>
+  <p class="text-sm text-text-secondary mb-2">{post.description}</p>
+  {
+    showTags && post.tags.length > 0 && (
+      <div class="flex gap-2 flex-wrap text-xs">
+        {post.tags.map((tag) => (
+          <a
+            href={`/tags/${tag}/`}
+            class="px-2 py-0.5 border border-border rounded-sm text-text-secondary hover:bg-accent hover:text-white hover:border-accent"
+          >
+            {tag}
+          </a>
+        ))}
+      </div>
+    )
+  }
+</article>
