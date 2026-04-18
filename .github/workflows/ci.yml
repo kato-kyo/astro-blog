@@ -17,6 +17,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: check / test / build
@@ -24,14 +27,16 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # content/ は private submodule。
-      # `CONTENT_PAT` は private repo の read 権限を持つ Personal Access Token。
-      # 未設定の場合は checkout で失敗するので、リポジトリの Secrets に登録しておくこと。
+      # メインリポは default GITHUB_TOKEN で取得し、private submodule は CONTENT_PAT で別途取得。
+      # これにより CONTENT_PAT の権限を content repo のみに最小化できる。
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.CONTENT_PAT }}
+
+      - name: Checkout content submodule
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
 
       # pnpm を Node.js より先にインストールしておくことで setup-node の cache: 'pnpm' が機能する
       - name: Setup pnpm
@@ -52,7 +57,11 @@ jobs:
       - name: Unit tests (vitest)
         run: pnpm test
 
+      # Lighthouse CI を本番同等の出力で計測するため production env を渡す
       - name: Build (astro build)
+        env:
+          PUBLIC_APP_ENV: production
+          PUBLIC_SITE_URL: https://katokyo.com
         run: pnpm build
 
       # ビルド成果物 `dist/` を再利用し、スモーク観点（§7.2）を検証する。

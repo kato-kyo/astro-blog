@@ -19,6 +19,9 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     name: Build & Deploy to Cloudflare Pages
@@ -26,12 +29,14 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      # content/ は private submodule。CONTENT_PAT が必須。
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.CONTENT_PAT }}
+
+      - name: Checkout content submodule
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -45,26 +50,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ブランチに応じて PUBLIC_APP_ENV を切替（§8.3 環境別の振る舞い）
+      # PUBLIC_SITE_URL 未設定だと astro.config.ts のフォールバック example.com が採用され
+      # sitemap/canonical/OGP が全て壊れるため、環境ごとに明示する。
       - name: Resolve environment
         id: env
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "public_app_env=production" >> "$GITHUB_OUTPUT"
+            echo "public_site_url=https://katokyo.com" >> "$GITHUB_OUTPUT"
           else
             echo "public_app_env=preview" >> "$GITHUB_OUTPUT"
+            echo "public_site_url=https://develop.katokyo.pages.dev" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build
         env:
           PUBLIC_APP_ENV: ${{ steps.env.outputs.public_app_env }}
+          PUBLIC_SITE_URL: ${{ steps.env.outputs.public_site_url }}
         run: pnpm build
 
-      # wrangler pages deploy で dist/ を Cloudflare Pages にアップロード。
-      # プロジェクト名は astro-blog を仮置き。Cloudflare 側で別名を使っている場合は projectName を調整。
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=astro-blog --branch=${{ github.ref_name }}
+          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }}
