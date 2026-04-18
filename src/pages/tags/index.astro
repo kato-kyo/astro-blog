@@ -1,0 +1,40 @@
+---
+/**
+ * 全タグ一覧（F-04）。`listAllTags()` が返す件数降順（同数は値昇順）をそのまま表示する。
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listAllTags } from "../../lib/queries";
+
+const tags = await listAllTags();
+---
+
+<BaseLayout title="Tags" description="タグ一覧">
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <h1 class="text-3xl font-bold mb-2">Tags</h1>
+      <p class="text-sm text-text-secondary">記事に付与されたタグの一覧</p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    {
+      tags.length === 0 ? (
+        <p class="text-text-muted">まだタグがありません。</p>
+      ) : (
+        <ul class="max-w-[45rem] flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <li>
+              <a
+                href={`/tags/${tag.value}/`}
+                class="inline-flex items-center gap-2 px-3 py-1 border border-border rounded-sm text-sm text-text-secondary hover:bg-accent hover:text-white hover:border-accent"
+              >
+                <span>{tag.value}</span>
+                <span class="text-xs text-text-muted">({tag.count})</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</BaseLayout>
