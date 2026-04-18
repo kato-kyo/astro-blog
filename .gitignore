@@ -9,6 +9,10 @@ node_modules/
 # Astro generated types / cache
 .astro/
 
+# git worktrees（並列作業用。各 worktree は別ブランチ・別 HEAD を持つ）
+.worktrees/
+.claude/worktrees/
+
 # logs
 npm-debug.log*
 yarn-debug.log*

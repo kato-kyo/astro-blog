@@ -87,5 +87,8 @@
         "*.openai.com"
       ]
     }
+  },
+  "worktree": {
+    "symlinkDirectories": ["node_modules", ".astro"]
   }
 }
