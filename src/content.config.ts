@@ -91,6 +91,7 @@ const site = defineCollection({
     authorJa: z.string().min(1),
     bio: z.string().min(1),
     github: z.url(),
+    x: z.url().optional(),
   }),
 });
 
