@@ -1,0 +1,69 @@
+---
+/**
+ * ブログ記事一覧（F-02）— 2 ページ目以降。
+ *
+ * 要件 (requirements.md §6.5):
+ * - URL: `/blog/page/2/`, `/blog/page/3/`, ...
+ * - `getStaticPaths` で `buildPagePaths` を利用して静的生成
+ * - 総件数が 1 ページに収まる場合は何も生成されない（1 ページ目のみ）
+ */
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PostListItem from "../../../components/PostListItem.astro";
+import Pagination from "../../../components/Pagination.astro";
+import { listPublishedPosts } from "../../../lib/queries";
+import { paginate, buildPagePaths } from "../../../lib/policies";
+
+export const getStaticPaths = (async () => {
+  const all = await listPublishedPosts();
+  const pages = buildPagePaths(all.length);
+  return pages.map((page) => ({
+    params: { page: String(page) },
+    props: { page },
+  }));
+}) satisfies GetStaticPaths;
+
+type Props = { page: number };
+
+const { page } = Astro.props;
+const all = await listPublishedPosts();
+const pageInfo = paginate(all, page);
+
+const canonical = new URL(`/blog/page/${page}/`, Astro.site);
+const prevUrl = pageInfo.hasPrev
+  ? new URL(page - 1 === 1 ? "/blog/" : `/blog/page/${page - 1}/`, Astro.site)
+  : undefined;
+const nextUrl = pageInfo.hasNext
+  ? new URL(`/blog/page/${page + 1}/`, Astro.site)
+  : undefined;
+---
+
+<BaseLayout
+  title={`Blog (page ${page})`}
+  description="技術ブログ記事一覧"
+  canonical={canonical}
+  prev={prevUrl}
+  next={nextUrl}
+  sidebar
+>
+  <section slot="hero" class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <h1 class="text-3xl font-bold mb-2">Blog</h1>
+      <p class="text-sm text-text-secondary">
+        ページ {page} / {pageInfo.totalPages}
+      </p>
+    </div>
+  </section>
+
+  <div>
+    {pageInfo.items.map((post) => (
+      <PostListItem post={post} headingLevel={2} showTags />
+    ))}
+  </div>
+
+  <Pagination
+    currentPage={pageInfo.page}
+    totalPages={pageInfo.totalPages}
+    basePath="/blog"
+  />
+</BaseLayout>

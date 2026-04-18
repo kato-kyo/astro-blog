@@ -1,16 +1,32 @@
 ---
 /**
- * ブログ記事一覧（F-02）。ページネーション・サイドバーは後段で追加。
+ * ブログ記事一覧（F-02）— 1 ページ目。
+ *
+ * 要件 (requirements.md §6.5):
+ * - 1 ページ 10 件。2 ページ目以降は `/blog/page/[n]/`
+ * - `<link rel="canonical">`, `<link rel="next">` を BaseLayout の props で出力
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostListItem from "../../components/PostListItem.astro";
+import Pagination from "../../components/Pagination.astro";
 import { listPublishedPosts } from "../../lib/queries";
+import { paginate } from "../../lib/policies";
 
-const posts = await listPublishedPosts();
+const all = await listPublishedPosts();
+const pageInfo = paginate(all, 1);
+
+const canonical = new URL("/blog/", Astro.site);
+const nextUrl = pageInfo.hasNext ? new URL("/blog/page/2/", Astro.site) : undefined;
 ---
 
-<BaseLayout title="Blog" description="技術ブログ記事一覧">
-  <section class="bg-bg-secondary py-10 border-b border-border">
+<BaseLayout
+  title="Blog"
+  description="技術ブログ記事一覧"
+  canonical={canonical}
+  next={nextUrl}
+  sidebar
+>
+  <section slot="hero" class="bg-bg-secondary py-10 border-b border-border">
     <div class="container-wide">
       <h1 class="text-3xl font-bold mb-2">Blog</h1>
       <p class="text-sm text-text-secondary">
@@ -19,15 +35,21 @@ const posts = await listPublishedPosts();
     </div>
   </section>
 
-  <section class="container-wide py-10">
-    {
-      posts.length === 0 ? (
-        <p class="text-text-muted">まだ記事がありません。</p>
-      ) : (
-        <div class="max-w-[45rem]">
-          {posts.map((post) => <PostListItem post={post} headingLevel={2} showTags />)}
-        </div>
-      )
-    }
-  </section>
+  {
+    pageInfo.total === 0 ? (
+      <p class="text-text-muted">まだ記事がありません。</p>
+    ) : (
+      <div>
+        {pageInfo.items.map((post) => (
+          <PostListItem post={post} headingLevel={2} showTags />
+        ))}
+      </div>
+    )
+  }
+
+  <Pagination
+    currentPage={pageInfo.page}
+    totalPages={pageInfo.totalPages}
+    basePath="/blog"
+  />
 </BaseLayout>

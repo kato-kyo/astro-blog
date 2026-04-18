@@ -1,0 +1,75 @@
+# CI: 型チェック・ユニットテスト・ビルド検証
+#
+# - PR（全ブランチ）と main / develop への push で実行
+# - 同一 ref の古い実行は concurrency でキャンセル（Cloudflare Free tier のビルド数節約にも寄与）
+# - 詳細は docs/requirements.md §8.5 / §8.7 を参照
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+# 同じブランチの古い実行はキャンセル（ビルド数節約・フィードバック高速化）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: check / test / build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # メインリポは default GITHUB_TOKEN で取得し、private submodule は CONTENT_PAT で別途取得。
+      # これにより CONTENT_PAT の権限を content repo のみに最小化できる。
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout content submodule
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+
+      # pnpm を Node.js より先にインストールしておくことで setup-node の cache: 'pnpm' が機能する
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (astro check)
+        run: pnpm check
+
+      - name: Unit tests (vitest)
+        run: pnpm test
+
+      # Lighthouse CI を本番同等の出力で計測するため production env を渡す
+      - name: Build (astro build)
+        env:
+          PUBLIC_APP_ENV: production
+          PUBLIC_SITE_URL: https://katokyo.com
+        run: pnpm build
+
+      # ビルド成果物 `dist/` を再利用し、スモーク観点（§7.2）を検証する。
+      # 直前の build ステップで生成された dist/ をそのまま使うため `test:smoke:only` を利用。
+      - name: Smoke tests (dist/ verification)
+        run: pnpm test:smoke:only
+
+      # Lighthouse CI: 4 ページを 3 回計測し median で閾値 90 を検証（F-30, §9.1）。
+      # Chromium は ubuntu-latest に preinstalled。dist/ を staticDistDir で直接計測するため別サーバー不要。
+      - name: Lighthouse CI (performance / a11y / best-practices / SEO >= 90)
+        run: pnpm lhci

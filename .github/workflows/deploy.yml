@@ -1,0 +1,77 @@
+# Deploy: Cloudflare Pages へのビルド & デプロイ
+#
+# - main  → production (PUBLIC_APP_ENV=production)
+# - develop → preview   (PUBLIC_APP_ENV=preview)
+# - workflow_dispatch で任意の commit を手動再デプロイ可能（§8.8 ロールバック）
+# - Cloudflare 側の Git 連携自動デプロイは無効化済み。本ワークフローに一本化（§8.6）
+# - 詳細は docs/requirements.md §8.5 / §8.6 / §8.7 を参照
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+# 同じブランチの古い deploy はキャンセル（Free tier のビルド数節約）
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout content submodule
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
+          git config --global --add url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # PUBLIC_SITE_URL 未設定だと astro.config.ts のフォールバック example.com が採用され
+      # sitemap/canonical/OGP が全て壊れるため、環境ごとに明示する。
+      - name: Resolve environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "public_app_env=production" >> "$GITHUB_OUTPUT"
+            echo "public_site_url=https://katokyo.com" >> "$GITHUB_OUTPUT"
+          else
+            echo "public_app_env=preview" >> "$GITHUB_OUTPUT"
+            echo "public_site_url=https://develop.katokyo.pages.dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        env:
+          PUBLIC_APP_ENV: ${{ steps.env.outputs.public_app_env }}
+          PUBLIC_SITE_URL: ${{ steps.env.outputs.public_site_url }}
+        run: pnpm build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }}

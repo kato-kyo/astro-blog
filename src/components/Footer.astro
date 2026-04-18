@@ -2,9 +2,10 @@
 /**
  * サイトフッター（GP 風: 3-col widget + copyright）。
  */
-import { SITE } from "../config/site";
+import { getSite } from "../lib/queries";
 import { FOOTER_NAV } from "../config/nav";
 
+const site = await getSite();
 const year = new Date().getFullYear();
 ---
 
@@ -25,12 +26,13 @@ const year = new Date().getFullYear();
         <h3 class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider">Connect</h3>
         <ul class="list-none m-0 p-0 space-y-1">
           <li><a href="/rss.xml">RSS Feed</a></li>
-          <li><a href={SITE.github} rel="me">GitHub</a></li>
+          <li><a href={site.github} rel="me">GitHub</a></li>
+          {site.x && <li><a href={site.x} rel="me">X</a></li>}
         </ul>
       </div>
     </div>
     <p class="text-center pt-5 border-t border-border text-text-muted text-[0.824rem]">
-      &copy; {year} {SITE.author}. All rights reserved.
+      &copy; {year} {site.author}. All rights reserved.
     </p>
   </div>
 </footer>

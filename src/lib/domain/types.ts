@@ -52,3 +52,23 @@ export type CategoryCount = {
   readonly name: string;
   readonly count: number;
 };
+
+/** 固定ページ（about / services 等） */
+export type Page = {
+  readonly slug: string;
+  readonly title: string;
+  readonly description: string;
+  readonly order?: number;
+};
+
+/** ポートフォリオ実績 */
+export type Project = {
+  readonly slug: string;
+  readonly title: string;
+  readonly description: string;
+  readonly url?: string;
+  readonly tech: readonly string[];
+  readonly period: string;
+  readonly order?: number;
+  readonly heroImage?: string;
+};

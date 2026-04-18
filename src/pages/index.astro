@@ -4,31 +4,30 @@
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PostListItem from "../components/PostListItem.astro";
-import { listPublishedPosts } from "../lib/queries";
-import { SITE } from "../config/site";
+import { getSite, listPublishedPosts } from "../lib/queries";
 
 const LATEST_POSTS_COUNT = 5;
 
-const posts = await listPublishedPosts();
+const [site, posts] = await Promise.all([getSite(), listPublishedPosts()]);
 const latestPosts = posts.slice(0, LATEST_POSTS_COUNT);
 ---
 
-<BaseLayout title={SITE.title} description={SITE.description}>
-  <section class="bg-bg-secondary py-12 border-b border-border">
+<BaseLayout title={site.title} description={site.description} sidebar>
+  <section slot="hero" class="bg-bg-secondary py-12 border-b border-border">
     <div class="container-wide">
-      <h1 class="text-4xl font-bold mb-2 text-text">{SITE.author}</h1>
+      <h1 class="text-4xl font-bold mb-2 text-text">{site.author}</h1>
       <p class="text-lg text-text-secondary">Software Engineer</p>
-      <p class="text-sm text-text-muted mt-2">{SITE.bio}</p>
+      <p class="text-sm text-text-muted mt-2">{site.bio}</p>
     </div>
   </section>
 
-  <section class="container-wide py-12">
+  <section>
     <h2 class="text-2xl font-semibold mb-6">Recent Posts</h2>
     {
       latestPosts.length === 0 ? (
         <p class="text-text-muted">まだ記事がありません。</p>
       ) : (
-        <div class="max-w-[45rem]">
+        <div>
           {latestPosts.map((post) => <PostListItem post={post} headingLevel={3} />)}
         </div>
       )

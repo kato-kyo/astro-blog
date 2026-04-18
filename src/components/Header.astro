@@ -1,24 +1,47 @@
 ---
 /**
  * サイトヘッダー（GP 風: static・ソリッド背景・nav padding 10px 20px・font-size 15px）。
+ *
+ * - ナビ右端に SearchTrigger + Search（React island, `client:idle`）+ ThemeToggle（`client:load`）を配置する。
+ *   FOUC 防止スクリプト（BaseLayout.astro §6.1）が走った直後から操作可能にしたいため
+ *   ThemeToggle は `client:load` 必須（`client:idle` / `client:visible` は NG）。
+ *   Search は Pagefind JS の遅延読込が前提のため `client:idle` で十分。
  */
-import { SITE } from "../config/site";
+import { getSite } from "../lib/queries";
 import { MAIN_NAV } from "../config/nav";
+import ThemeToggle from "./ThemeToggle";
+import Search from "./Search";
+import SearchTrigger from "./SearchTrigger.astro";
+
+const site = await getSite();
 ---
 
 <header class="bg-header-bg text-header-text border-b border-header-border">
-  <div class="container-wide flex items-center justify-between min-h-[64px]">
-    <a href="/" class="text-[1.1rem] font-bold tracking-tight text-header-text">
-      {SITE.authorJa}
+  <div class="container-wide flex flex-wrap items-center justify-between gap-y-2 min-h-[64px] py-2">
+    <a
+      href="/"
+      class="flex items-center gap-2 text-[1.1rem] font-bold tracking-tight text-header-text no-underline"
+      aria-label={`${site.title} トップへ`}
+    >
+      <img
+        src="/images/avatar.png"
+        alt=""
+        width="32"
+        height="32"
+        class="h-8 w-8 shrink-0 rounded-full object-cover"
+        decoding="async"
+        loading="eager"
+      />
+      <span>{site.authorJa}</span>
     </a>
-    <nav aria-label="主要ナビゲーション">
-      <ul class="flex gap-0 m-0 p-0 list-none items-center">
+    <nav aria-label="主要ナビゲーション" class="flex items-center flex-wrap gap-y-1 max-w-full">
+      <ul class="flex flex-wrap gap-x-1 gap-y-1 m-0 p-0 list-none items-center">
         {
           MAIN_NAV.map((item) => (
             <li>
               <a
                 href={item.href}
-                class="block px-5 py-2.5 text-[15px] font-normal text-header-text opacity-90 hover:opacity-100"
+                class="block px-3 md:px-5 py-2 text-[15px] font-normal text-header-text opacity-90 hover:opacity-100"
               >
                 {item.label}
               </a>
@@ -26,6 +49,36 @@ import { MAIN_NAV } from "../config/nav";
           ))
         }
       </ul>
+      <div class="ml-2 flex items-center gap-1">
+        <SearchTrigger />
+        <ThemeToggle client:load />
+        {
+          site.x && (
+            <a
+              href={site.x}
+              rel="me noopener"
+              target="_blank"
+              aria-label="X (旧 Twitter)"
+              title="X"
+              class="inline-flex items-center justify-center w-9 h-9 rounded-sm opacity-90 hover:opacity-100 hover:bg-bg-secondary transition-colors no-underline"
+              style="color: var(--color-header-text)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
+          )
+        }
+      </div>
     </nav>
   </div>
+  {/* 検索モーダル本体（Pagefind JS は初回オープン時に遅延読込） */}
+  <Search client:idle />
 </header>

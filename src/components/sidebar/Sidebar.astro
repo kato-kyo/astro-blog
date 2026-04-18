@@ -1,0 +1,25 @@
+---
+/**
+ * Sidebar — About / Categories / Tags widget を縦に並べるラッパー（GP 風）。
+ *
+ * 参照:
+ * - docs/design.md §4.3 F-02（Desktop: サイドバー 1/3、Mobile: 下方）
+ * - docs/design.md §3.7（border + radius-md、シャドウなし）
+ *
+ * レスポンシブ:
+ * - 2 カラム化は親（BaseLayout）側で `lg:` ブレークポイントで制御する
+ * - 本コンポーネント自身は縦積みのみ。親の grid セル内で自然にフィットする
+ */
+import AboutWidget from "./AboutWidget.astro";
+import CategoriesWidget from "./CategoriesWidget.astro";
+import TagsWidget from "./TagsWidget.astro";
+---
+
+<aside
+  aria-label="サイドバー"
+  class="flex flex-col gap-6"
+>
+  <AboutWidget />
+  <CategoriesWidget />
+  <TagsWidget />
+</aside>

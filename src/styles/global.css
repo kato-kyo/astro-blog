@@ -100,6 +100,8 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   line-height: 1.65;
+  /* ダークモード切替時の軽い色遷移（prefers-reduced-motion で自動抑止される） */
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 /* Classic link styling: 青 + 下線常時 (GP 慣習) */
@@ -148,8 +150,6 @@ footer a:hover {
   --tw-prose-links: var(--color-accent);
   --tw-prose-bold: var(--color-text);
   --tw-prose-code: var(--color-text);
-  --tw-prose-pre-bg: var(--color-bg-alt);
-  --tw-prose-pre-code: var(--color-text);
   --tw-prose-quotes: var(--color-text-secondary);
   --tw-prose-hr: var(--color-border);
   --tw-prose-th-borders: var(--color-border);
@@ -161,10 +161,119 @@ footer a:hover {
   --tw-prose-links: var(--color-accent);
   --tw-prose-bold: var(--color-text);
   --tw-prose-code: var(--color-text);
-  --tw-prose-pre-bg: var(--color-bg-alt);
-  --tw-prose-pre-code: var(--color-text);
   --tw-prose-quotes: var(--color-text-secondary);
   --tw-prose-hr: var(--color-border);
   --tw-prose-th-borders: var(--color-border);
   --tw-prose-td-borders: var(--color-border);
+}
+
+/* =======================================================================
+ * Responsive content safety (F-28)
+ * prose 内の overflow しがちな要素（table, pre）に横スクロールを許容する。
+ * 本文コンテナ幅 (45rem) を超えるコンテンツで崩れないようにするための保険。
+ * Shiki の <pre> には既に overflow-x:auto が付与されているが、明示しておく。
+ * ======================================================================= */
+.prose :where(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.prose :where(pre) {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* =======================================================================
+ * Shiki dual-theme: .dark クラスで light → dark を切り替え
+ * astro.config.ts の shikiConfig.themes を class ベースで適用するための上書き。
+ * Shiki は light を inline style、dark を --shiki-dark* カスタムプロパティとして
+ * 出力するため、.dark 配下でそれらを実値に切り替える。
+ * ======================================================================= */
+.dark .astro-code,
+.dark .astro-code span {
+  background-color: var(--shiki-dark-bg) !important;
+  color: var(--shiki-dark) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+/* 長い URL / 連続英数字が本文幅を突き抜けないようにする（日本語は影響しない） */
+.prose :where(p, li, blockquote) {
+  overflow-wrap: anywhere;
+}
+
+/* =======================================================================
+ * Callout: Zenn 風 `.msg` / `.msg-info` / `.msg-warn` / `.msg-alert`
+ *   - Markdown から `<aside class="msg msg-xxx">` として出力される想定 (T9.1)
+ *   - 既存トークン（--color-border / --color-bg-secondary / --color-accent）を
+ *     再利用し、ライト/ダークで自動追従させる
+ *   - warn / alert の固定色はダーク時にコントラスト不足になるため micro-adjust
+ * ======================================================================= */
+.msg {
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-bg-secondary);
+  padding: 0.75em 1em;
+  border-radius: var(--radius-sm);
+  margin: 1.25em 0;
+}
+.msg-info {
+  border-left-color: var(--color-accent);
+}
+.msg-warn {
+  border-left-color: #d19a00;
+}
+.msg-alert {
+  border-left-color: #d7263d;
+  background: color-mix(in srgb, #d7263d 6%, var(--color-bg-secondary));
+}
+.msg > p:first-child {
+  margin-top: 0;
+}
+.msg > p:last-child {
+  margin-bottom: 0;
+}
+
+/* ダーク時のコントラスト微調整（ダーク背景で視認しやすい明度に寄せる） */
+.dark .msg-warn {
+  border-left-color: #ffc847;
+}
+.dark .msg-alert {
+  border-left-color: #ff5b6e;
+  background: color-mix(in srgb, #ff5b6e 10%, var(--color-bg-secondary));
+}
+
+/* prose 配下でも独自に margin を持つため、typography プラグインの余白と衝突しないよう固定 */
+.prose :where(.msg) {
+  margin: 1.25em 0;
+  padding: 0.75em 1em;
+}
+
+/* =======================================================================
+ * Callout: 折りたたみ `<details class="callout">`
+ * ======================================================================= */
+details.callout {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.5em 1em;
+  margin: 1.25em 0;
+}
+details.callout > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.25em 0;
+  outline: none;
+}
+details.callout[open] > summary {
+  margin-bottom: 0.5em;
+}
+details.callout > summary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* prose 配下で typography プラグインの details 既定スタイルと衝突しないよう固定 */
+.prose :where(details.callout) {
+  margin: 1.25em 0;
+  padding: 0.5em 1em;
 }

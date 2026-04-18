@@ -47,8 +47,8 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T0.1 | agent 3 branch を develop に merge | ❌ | ✓ |   |   | sitemap-rss の lockfile を最初に取り込むと後続の依存整合が楽 |
-| T0.2 | sitemap に `/tags/*`, `/categories/*` URL を追記 | ❌ |   |   | ✓ | T0.1 完了後に実施 |
+| T0.1 | agent 3 branch を develop に merge | ❌ | ✓ |   |   | sitemap-rss の lockfile を最初に取り込むと後続の依存整合が楽 ✓ 2026-04-18 |
+| T0.2 | sitemap に `/tags/*`, `/categories/*` URL を追記 | ❌ |   |   | ✓ | T0.1 完了後に実施 ✓ 2026-04-18 |
 
 **推奨 merge 順**: `worktree-agent-a2d80006`（lockfile） → `worktree-agent-aa48d24e`（ページ群） → `worktree-agent-a746d5af`（CI）
 
@@ -58,9 +58,9 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T1.1 | `/about/` 固定ページ（pages コレクション） | ⚠️ | ✓ |   |   | `src/content.config.ts` を触る |
-| T1.2 | `/projects/` 固定ページ（projects コレクション） | ⚠️ | ✓ |   |   | 同上。新規 frontmatter スキーマ追加 |
-| T1.3 | `robots.txt.ts`（環境別 Allow/Disallow） | ✅ |   |   |   | `src/pages/robots.txt.ts` 新規のみ |
+| T1.1 | `/about/` 固定ページ（pages コレクション） | ⚠️ | ✓ |   |   | `src/content.config.ts` を触る ✓ 2026-04-18 |
+| T1.2 | `/projects/` 固定ページ（projects コレクション） | ⚠️ | ✓ |   |   | 同上。新規 frontmatter スキーマ追加 ✓ 2026-04-18 |
+| T1.3 | `robots.txt.ts`（環境別 Allow/Disallow） | ✅ |   |   |   | `src/pages/robots.txt.ts` 新規のみ ✓ 2026-04-18 |
 
 **並列化方針**: T1.1 と T1.2 は `content.config.ts` で F 衝突 → **1 agent に統合**。T1.3 はそれと並列可。
 **推奨**: 2 agent 並列（「T1.1+T1.2 統合」と「T1.3」）。
@@ -71,12 +71,12 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T2.1 | ページネーション 共通ヘルパー + `/blog/page/[n]/` | ❌ |   |   |   | ヘルパーを `lib/policies/` or `lib/queries/` に作成 |
-| T2.2 | `/tags/[tag]/page/[n]/` | ⚠️ |   |   | ✓ | T2.1 のヘルパーに依存 |
-| T2.3 | `/categories/[category]/page/[n]/` | ⚠️ |   |   | ✓ | 同上 |
-| T2.4 | 記事詳細拡充（ToC + 読了時間 + 関連記事 UI 結線） | ❌ | ✓ |   |   | `/blog/[...slug].astro` に 3 改修。ロジック（`estimateReadingTime`, `findRelatedPosts`）は policies に実装・テスト済み。ToC のみ新規（Astro `headings` + React `client:idle`） |
-| T2.5 | スモークテスト（dist 検証: HTML/RSS/sitemap/OGP/draft 除外） | ✅ | ? | ? |   | `cheerio` 等 D の可能性。独立ディレクトリ |
-| T2.6 | 画像処理方針の決定と適用（`heroImage`） | ✅ |   | ? |   | Astro 標準 `Image`/`Picture` 採用可否、`content-sample` 画像の最適化。`sharp` は既に `onlyBuiltDependencies` 登録済み |
+| T2.1 | ページネーション 共通ヘルパー + `/blog/page/[n]/` | ❌ |   |   |   | `lib/policies/pagination.ts` + `Pagination.astro`（basePath で汎用化）+ 14 tests ✓ 2026-04-18 |
+| T2.2 | `/tags/[tag]/page/[n]/` | ⚠️ |   |   | ✓ | T2.1 の `Pagination.astro` / `paginate` を再利用。日本語タグも自動エンコード ✓ 2026-04-18 |
+| T2.3 | `/categories/[category]/page/[n]/` | ⚠️ |   |   | ✓ | 同上。日本語カテゴリも percent-encode 確認 ✓ 2026-04-18 |
+| T2.4 | 記事詳細拡充（ToC + 読了時間 + 関連記事 UI 結線） | ❌ | ✓ |   |   | `/blog/[...slug].astro` + `ToC.tsx`（React client:idle, IntersectionObserver）✓ 2026-04-18 |
+| T2.5 | スモークテスト（dist 検証: HTML/RSS/sitemap/OGP/draft 除外） | ✅ | ? | ? |   | `tests/smoke/` + `test:smoke:only` + CI 組込み。cheerio dev 追加。OGP は T3.3 完了後に skip 解除 ✓ 2026-04-18 |
+| T2.6 | 画像処理方針の決定と適用（`heroImage`） | ✅ |   | ? |   | **保留**: content-sample に画像素材なし。実記事投入時に合わせて着手（Astro `Image` 採用可否含め） |
 
 **並列化方針**:
 - T2.1 を先に完了 → T2.2 と T2.3 を **2 agent 並列**
@@ -91,9 +91,9 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T3.1 | ダークモードトグル（React island + BaseLayout） | ❌ | ✓ |   |   | BaseLayout + 新規 React component |
-| T3.2 | 右サイドバー（About / Categories / Tags widget） | ❌ | ✓ |   |   | BaseLayout + 各一覧ページ |
-| T3.3 | OGP / メタタグ生成 | ❌ | ✓ |   |   | BaseLayout の `<head>` 変更 |
+| T3.1 | ダークモードトグル（React island + BaseLayout） | ❌ | ✓ |   |   | `ThemeToggle.tsx` (React client:load) + Header 配置 + 0.15s transition ✓ 2026-04-18 |
+| T3.2 | 右サイドバー（About / Categories / Tags widget） | ❌ | ✓ |   |   | `Sidebar.astro` + 3 widget、BaseLayout に sidebar props / named slot hero。lg: 2 カラム ✓ 2026-04-18 |
+| T3.3 | OGP / メタタグ生成 | ❌ | ✓ |   |   | BaseLayout に og:*, twitter:*, article:* を追加。smoke test の OGP skip 解除 ✓ 2026-04-18 |
 
 **並列化方針**: 3 タスクすべて `BaseLayout.astro` を触るため **互いに直列**。
 **推奨順**: `T3.3 OGP`（SEO 要件で優先度最高） → `T3.1 ダークモード`（既に FOUC 防止スクリプト実装済みのため差分小） → `T3.2 サイドバー`（レイアウト大変更）
@@ -106,7 +106,7 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T4.1 | Pagefind 全文検索（モーダル + index 生成） | ✅ |   | ✓ |   | `pagefind` 依存追加。他 D タスクと同時実行しない |
+| T4.1 | Pagefind 全文検索（モーダル + index 生成） | ✅ |   | ✓ |   | pagefind@1.5.2、自作 React モーダル（client:idle、Ctrl+K/Esc）、build script に索引生成連結、smoke test 4 件追加 ✓ 2026-04-18 |
 
 **並列化方針**: 依存追加を伴うため、他の D タスクがない時期に単独 agent で実施。モーダル UI は React island。
 
@@ -116,7 +116,7 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T5.1 | ADR 追加（ページネーション方式・OGP 方針・Pagefind 採用等） | ✅ |   |   |   | `docs/adr/` 以下。独立 |
+| T5.1 | ADR 追加（ページネーション方式・OGP 方針・Pagefind 採用等） | ✅ |   |   |   | ADR-004〜007（ページネーション/OGP/Pagefind/ダークモード）を追加 ✓ 2026-04-18 |
 
 **並列化方針**: 他フェーズの実装中にも並行可能。
 
@@ -126,9 +126,9 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T6.1 | レスポンシブ検証と調整（F-28） | ⚠️ | ✓ |   | ✓ | 全ページを `design.md` §5 のブレークポイントで検証。Playwright MCP + 実機で確認。T3.x 完了後が効率的 |
-| T6.2 | アクセシビリティ監査（F-29） | ⚠️ | ✓ |   | ✓ | セマンティック HTML、キーボードナビ、コントラスト比、skip link、ARIA。`axe` 的自動チェック + 手動検証。T3.2 サイドバー実装後が効率的 |
-| T6.3 | Lighthouse CI 導入（F-30） | ✅ |   | ✓ |   | `@lhci/cli` を devDependencies に追加、`.lighthouserc.json` 設定、GitHub Actions 組込み。閾値 90 以上を CI 失敗条件 |
+| T6.1 | レスポンシブ検証と調整（F-28） | ⚠️ | ✓ |   | ✓ | Header flex-wrap / prose table blockify / Search モバイル収容。残: ハンバーガー未実装 ✓ 2026-04-18 |
+| T6.2 | アクセシビリティ監査（F-29） | ⚠️ | ✓ |   | ✓ | Header aria-label、overflow-wrap。残: Search focus trap 未実装、text-muted ライト側 AA 不足 ✓ 2026-04-18 |
+| T6.3 | Lighthouse CI 導入（F-30） | ✅ |   | ✓ |   | `@lhci/cli@0.15.1`、4 URL × 3 runs × 4 カテゴリ median 0.9、ci.yml 組込み ✓ 2026-04-18 |
 
 **並列化方針**: T6.3 は独立（✅）。T6.1 と T6.2 はフェーズ 3（UI 完成）後に実施するのが手戻り少。T6.3 はフェーズ 2 以降のいつでも着手可。
 
@@ -138,8 +138,8 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T7.1 | `.env.example` 作成 | ✅ |   |   |   | `PUBLIC_APP_ENV`, `PUBLIC_SITE_URL` など必要キーを雛形化 |
-| T7.2 | content private repo 作成 + submodule 化（ADR-002, ADR-003） | ❌ | ✓ | ✓ | ✓ | `astro-blog-content` の新規リポジトリ作成 → `content-sample/` から移行 → `git submodule add`。`.gitmodules` / CI workflow の `submodules: recursive` + `CONTENT_PAT` 切替 |
+| T7.1 | `.env.example` 作成 | ✅ |   |   |   | `PUBLIC_APP_ENV` / `PUBLIC_SITE_URL` + コメント付き将来用プレースホルダー ✓ 2026-04-18 |
+| T7.2 | content private repo 作成 + submodule 化（ADR-002, ADR-003） | ❌ | ✓ | ✓ | ✓ | `astro-blog-content` に初期投入 → submodule mount を `content-src/` に、実データは `content-src/content/`、contentRoot を `./content-src/content` に設定 → ci.yml/deploy.yml を `submodules: recursive` + `CONTENT_PAT` に切替 ✓ 2026-04-18 |
 | T7.3 | Cloudflare Pages プロジェクト作成・環境変数設定 | ✅ |   |   |   | ダッシュボード作業。Git 連携自動デプロイは**無効化**（§8.6）。`PUBLIC_APP_ENV` を Production=production / Preview=preview |
 | T7.4 | カスタムドメイン設定 | ⚠️ |   |   | ✓ | T7.3 完了後。DNS / TLS 設定 |
 | T7.5 | GitHub Actions の secrets 登録（`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, 将来 `CONTENT_PAT`） | ✅ |   |   |   | リポジトリ側の作業のみ |
@@ -147,6 +147,152 @@ merge 順序の調整と統合修正。
 **並列化方針**: T7.2 は submodule 化で複数ファイル（`.gitmodules`, CI yml, `content.config.ts` の loader path）を触るため単独 agent 推奨。T7.1/T7.3/T7.5 は独立で並列可。T7.4 は T7.3 依存。
 
 **実施タイミング**: T7.1 はフェーズ 0 と並行で早期に実施推奨。T7.2 はコンテンツが充実した段階（フェーズ 3〜4 後）。T7.3〜T7.5 は初回デプロイ前に必須。
+
+---
+
+## フェーズ 8: 追加で発見された技術債（後続）
+
+T6.1/T6.2 監査および運用視点で追加抽出したタスク。優先度は中〜低。
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T8.1 | モバイル用ハンバーガーメニュー（`MobileMenu.tsx`） | ❌ | ✓ |   |   | `docs/design.md` §4.2 参照。Header の小画面ナビを集約。React island（`client:load` or `client:idle`）+ BaseLayout 小改修 |
+| T8.2 | Search モーダル focus trap 実装 | ✅ | ✓ |   |   | 現状: Tab が moadl 外へ漏れる。`Search.tsx` 単体改修。Tab キー時の要素列挙 + 周回、初期フォーカス・復帰は既実装 |
+| T8.3 | `text-muted` ライトモードのコントラスト AA 適合 | ❌ | ✓ |   |   | `#878787` → `#767676` 程度。`docs/design.md` §3.1 のトークン変更判断を要する |
+| T8.4 | コードブロックのコピーボタン（`docs/design.md` §10） | ✅ | ✓ |   |   | rehype プラグイン or Astro コンポーネントで実装。既存 Shiki 出力への注入 |
+| T8.5 | OGP デフォルト画像の整備 | ⚠️ | ✓ | ? |   | `public/og-image.png` を作成 → BaseLayout のデフォルト値に設定。デザイン作業が先 |
+| T8.6 | T2.6 画像処理方針の再着手 | ⚠️ | ✓ | ? |   | 記事投入時に Astro `Image`/`Picture` 採否を決定。T8.5 と統合可能 |
+
+**並列化方針**: T8.2 / T8.4 は互いに独立で並列可。T8.1 / T8.3 / T8.5 / T8.6 は BaseLayout / トークン / 画像と関連し個別判断。
+
+---
+
+## フェーズ 9: Markdown 拡張記法対応（Zenn / Qiita 互換）
+
+zenn-pub から移行した記事の `:::message`・`:::details` を Astro の remark/rehype パイプラインで解釈できるようにする。Qiita の `:::note` にも同時対応することで、将来 Qiita 記事を追加するときも追加実装不要にする。方針は ADR-008 として別途記録。
+
+### 技術スタック
+
+- **remark-directive** — `:::name[label]{attrs}` 記法を AST 化する公式プラグイン
+- 自作 remark plugin — `containerDirective` ノードを `<aside>` / `<details>` 等に hName マッピング
+- 自作 CSS — GP 風デザイントークンに沿った callout スタイル（info / warn / alert の 3 段階）
+
+### タスク一覧
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T9.1 | remark-directive 導入 + 自作 handler 実装 | ❌ | ✓ | ✓ |   | `remark-directive@4.0.0` + `@types/mdast` / `@types/unist` / `mdast-util-directive`。`src/lib/markdown/directives.ts` 実装 + 10 unit tests。`:::message`/`:::note`/`:::details` を `<aside>`/`<details>` に展開 ✓ 2026-04-18 |
+| T9.2 | Zenn 風 callout CSS を追加 | ✅ | ✓ |   |   | `.msg` (border-left accent / info / warn / alert) + `details.callout` + dark 微調整 + prose 余白調整 ✓ 2026-04-18 |
+| T9.3 | 既存記事の `:::details <label>` を remark-directive 仕様に正規化 | ⚠️ | ✓ |   | ✓ | `:::details label` は remark-directive が認識しないため `:::details[label]` に書き換え。f5677ad1683bbd.md の 3 箇所。`:::message alert` は handler fallback で吸収し書き換え不要 ✓ 2026-04-18 |
+| T9.4 | 各記事の description を記事内容から書き起こし | ⚠️ | ✓ |   |   | 24 記事を Claude が本文を読んで 1-2 文の要約に手書き書き換え。fallback 排除し SEO/OGP で意味のある文に差替え ✓ 2026-04-18 |
+| T9.5 | 画像素材の配置と参照パス修正 | ✅ | ✓ |   |   | 方針変更: Astro が MD 内の相対画像を処理しないため `public/images/`（親 repo public）に配置。MD 内の `/images/...` 絶対参照はそのまま維持。46 画像配置、build で `dist/images/` に正常コピー確認 ✓ 2026-04-18 |
+| T9.6 | 数式対応（`remark-math` + `rehype-katex`） | ✅ |   | ✓ |   | **見送り**: インベントリ上 `$` 検出があった記事（`20170930-83af6c1d83bb.md`）は shell プロンプト（`$command`）の誤検出で、実データに数式なし。将来数式記事を書く時点で再評価 |
+| T9.7 | ADR-008 + ルール更新 | ✅ |   |   |   | `docs/adr/008-markdown-directive-support.md` 新設 + `content-management.md` にサポート記法表・kind 正規化規則・未対応記法を追記 ✓ 2026-04-18 |
+
+### 並列化方針
+
+- **Wave 1（並列可 3 件）**: T9.1 / T9.2 / T9.5
+  - T9.1（`src/lib/markdown/` + `astro.config.ts`）と T9.2（`src/styles/global.css`）と T9.5（`content-src/**`）は F 軸独立
+  - T9.1 のみ D 軸（`remark-directive` 追加）を持つので、他の D タスクは同時起動しない
+- **Wave 2（単独）**: T9.3 — T9.1 の handler 仕様確定後。基本は handler 側で吸収して記事無変更を目指す。吸収不可な記法があれば一括書き換え
+- **Wave 3（並列可 2〜3 件）**: T9.4（分割 agent）/ T9.6 / T9.7
+
+### Wave 1 詳細設計
+
+#### T9.1 自作 handler の契約
+
+```ts
+// src/lib/markdown/directives.ts
+import type { Root } from "mdast";
+import { visit } from "unist-util-visit";
+
+type Kind = "info" | "warn" | "alert";
+
+function resolveKind(node: { attributes?: Record<string, string>; label?: string }): Kind {
+  const raw =
+    node.attributes?.kind ??
+    node.attributes?.level ??
+    node.label ??                     // Zenn `:::message alert` の後方互換
+    "info";
+  if (raw === "alert" || raw === "danger") return "alert";
+  if (raw === "warn" || raw === "warning") return "warn";
+  return "info";
+}
+
+export default function remarkZennQiitaDirectives() {
+  return (tree: Root) => {
+    visit(tree, (node: any) => {
+      if (node.type !== "containerDirective") return;
+      const name = node.name;
+      if (name === "message" || name === "note") {
+        const kind = resolveKind(node);
+        node.data = {
+          hName: "aside",
+          hProperties: { className: ["msg", `msg-${kind}`] },
+        };
+      } else if (name === "details") {
+        const summary = node.children[0]?.data?.directiveLabel
+          ? node.children.shift()
+          : node.attributes?.summary ?? node.label ?? "Details";
+        // summary を先頭ノードに
+        node.data = { hName: "details", hProperties: { className: ["callout"] } };
+        node.children.unshift({
+          type: "paragraph",
+          data: { hName: "summary" },
+          children: [{ type: "text", value: String(summary) }],
+        });
+      }
+    });
+  };
+}
+```
+
+#### T9.2 CSS 仕様（抜粋）
+
+```css
+.msg {
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-left-color: var(--accent);
+  background: var(--bg-secondary);
+  padding: 0.75em 1em;
+  border-radius: 3px;
+  margin: 1.25em 0;
+}
+.msg-info { border-left-color: var(--accent); }
+.msg-warn { border-left-color: #d19a00; }
+.msg-alert { border-left-color: #d7263d; background: color-mix(in srgb, #d7263d 6%, var(--bg-secondary)); }
+details.callout {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.5em 1em;
+  margin: 1.25em 0;
+}
+details.callout > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.25em 0;
+}
+```
+
+#### T9.5 画像配置
+
+1. zenn-pub の `images/` を `content-src/content/blog/images/` にコピー（submodule 内、private に保持）
+2. 記事内の `/images/foo.jpg` を `./images/foo.jpg` に一括 sed 置換
+3. Astro が Markdown 画像の相対 import を解決できることを確認（Content Collection の loader が base 相対で解決）
+4. 解決できない場合の代替は `public/images/` 配置だが、public repo に画像が載るため basically NG
+
+### 検証ゲート
+
+- `pnpm check` — 型エラー 0
+- `pnpm test` — 既存 52 テストを維持
+- `pnpm build` — 52+ pages 生成、記事内の `:::message` / `:::details` が HTML に展開
+- `pnpm test:smoke:only` — 16 tests pass（Pagefind index 再生成を含む）
+
+### アンチパターン
+
+- 記事の `:::` を HTML に手書きで書き換える（案 B）と plugin 方針が崩れる → 案 A 採用期間中は記事側の `:::` を残す
+- CSS を Zenn 公式（`zenn-content-css`）から丸ごと import する → ライセンス・デザイン方針と衝突、必要部分だけ移植
 
 ---
 
