@@ -11,7 +11,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostListItem from "../../components/PostListItem.astro";
 import ToC, { type TocHeading } from "../../components/ToC";
 import { estimateReadingTime, findRelatedPosts } from "../../lib/policies";
-import { listPublishedEntries, listPublishedPosts, toPostMeta } from "../../lib/queries";
+import {
+  getAuthorById,
+  listPublishedEntries,
+  listPublishedPosts,
+  toPostMeta,
+} from "../../lib/queries";
 import { isDev } from "../../lib/env";
 import { entryIdToSlug } from "../../lib/domain";
 
@@ -32,6 +37,10 @@ const readingTime = estimateReadingTime(entry.body ?? "");
 const allPosts = await listPublishedPosts();
 const related = findRelatedPosts(meta, allPosts);
 
+// OGP `article:author` 用の著者名解決。未登録の場合は id をフォールバックとして渡す。
+const authorEntry = await getAuthorById(meta.author);
+const authorName = authorEntry?.name ?? meta.author;
+
 // ToC 用に depth/slug/text の最小形に変換（React 側に渡す props を Astro API から分離）
 const tocHeadings: TocHeading[] = headings.map((h) => ({
   depth: h.depth,
@@ -44,7 +53,14 @@ const tocHeadings: TocHeading[] = headings.map((h) => ({
 const showDraftBadge = isDev && meta.draft;
 ---
 
-<BaseLayout title={meta.title} description={meta.description}>
+<BaseLayout
+  title={meta.title}
+  description={meta.description}
+  type="article"
+  publishedAt={meta.publishedAt}
+  updatedAt={meta.updatedAt}
+  author={authorName}
+>
   <article class="content-prose py-10">
     <header class="mb-8 pb-4 border-b border-border">
       <h1 class="text-3xl font-bold leading-snug mb-3">{meta.title}</h1>

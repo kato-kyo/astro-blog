@@ -20,13 +20,43 @@ type Props = {
   prev?: string | URL;
   /** `<link rel="next">` の URL（ページネーション） */
   next?: string | URL;
+  /**
+   * OGP 画像 URL（F-24）。
+   * 現状サイトデフォルト画像は未整備のため、未指定なら `og:image` は出力しない。
+   * 将来サイトデフォルト画像を用意した場合はここで補完する。
+   */
+  image?: string | URL;
+  /** OGP タイプ（F-24）。記事ページでは `article` を指定する */
+  type?: "website" | "article";
+  /** `article:published_time`（記事ページのみ） */
+  publishedAt?: Date;
+  /** `article:modified_time`（記事ページのみ） */
+  updatedAt?: Date;
+  /** `article:author`（記事ページのみ。著者名） */
+  author?: string;
 };
 
-const { title, description = SITE.description, canonical, prev, next } = Astro.props;
+const {
+  title,
+  description = SITE.description,
+  canonical,
+  prev,
+  next,
+  image,
+  type = "website",
+  publishedAt,
+  updatedAt,
+  author,
+} = Astro.props;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
 const canonicalHref = canonical ? canonical.toString() : undefined;
 const prevHref = prev ? prev.toString() : undefined;
 const nextHref = next ? next.toString() : undefined;
+
+// OGP の URL は canonical を最優先し、未指定なら現在の request URL を使う。
+// Astro.site は astro.config.ts の `site` を参照（本番 URL / プレビュー URL を環境で切替）
+const ogUrl = canonicalHref ?? new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
+const ogImage = image ? image.toString() : undefined;
 ---
 
 <!doctype html>
@@ -41,6 +71,30 @@ const nextHref = next ? next.toString() : undefined;
     {canonicalHref && <link rel="canonical" href={canonicalHref} />}
     {prevHref && <link rel="prev" href={prevHref} />}
     {nextHref && <link rel="next" href={nextHref} />}
+
+    {/* Open Graph Protocol（F-24） */}
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={ogUrl} />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:locale" content="ja_JP" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+
+    {/* Twitter Card */}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    {/* 記事ページのみ出力する article:* メタタグ */}
+    {type === "article" && publishedAt && (
+      <meta property="article:published_time" content={publishedAt.toISOString()} />
+    )}
+    {type === "article" && updatedAt && (
+      <meta property="article:modified_time" content={updatedAt.toISOString()} />
+    )}
+    {type === "article" && author && <meta property="article:author" content={author} />}
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
