@@ -51,4 +51,34 @@ const authors = defineCollection({
   }),
 });
 
-export const collections = { blog, authors };
+/**
+ * 固定ページ（about / services 等）。
+ * requirements.md §5.1 pages コレクション参照。
+ */
+const pages = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: `${contentRoot}/pages` }),
+  schema: z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    order: z.number().optional(),
+  }),
+});
+
+/**
+ * ポートフォリオ実績（F-09）。
+ * requirements.md §5.1 projects コレクション参照。
+ */
+const projects = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: `${contentRoot}/projects` }),
+  schema: z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    url: z.url().optional(),
+    tech: z.array(z.string()).default([]),
+    period: z.string().min(1),
+    order: z.number().optional(),
+    heroImage: z.string().optional(),
+  }),
+});
+
+export const collections = { blog, authors, pages, projects };

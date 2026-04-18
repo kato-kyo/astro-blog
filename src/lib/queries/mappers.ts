@@ -3,7 +3,7 @@
  * この層のみが `astro:content` の型を import してよい。
  */
 import type { CollectionEntry } from "astro:content";
-import type { Post, PostMeta, Author } from "../domain/types.js";
+import type { Post, PostMeta, Author, Page, Project } from "../domain/types.js";
 import { entryIdToSlug } from "../domain/slug.js";
 
 export function toPostMeta(entry: CollectionEntry<"blog">): PostMeta {
@@ -32,5 +32,27 @@ export function toAuthor(entry: CollectionEntry<"authors">): Author {
     bio: entry.data.bio,
     avatarUrl: entry.data.avatarUrl,
     social: entry.data.social,
+  };
+}
+
+export function toPage(entry: CollectionEntry<"pages">): Page {
+  return {
+    slug: entryIdToSlug(entry.id),
+    title: entry.data.title,
+    description: entry.data.description,
+    order: entry.data.order,
+  };
+}
+
+export function toProject(entry: CollectionEntry<"projects">): Project {
+  return {
+    slug: entryIdToSlug(entry.id),
+    title: entry.data.title,
+    description: entry.data.description,
+    url: entry.data.url,
+    tech: entry.data.tech,
+    period: entry.data.period,
+    order: entry.data.order,
+    heroImage: entry.data.heroImage,
   };
 }

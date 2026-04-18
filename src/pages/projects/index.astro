@@ -1,0 +1,64 @@
+---
+/**
+ * ポートフォリオ一覧（F-09）。projects コレクションを order 昇順で一覧表示する。
+ *
+ * ルール:
+ * - `astro:content` は queries/ 経由で使用
+ * - ビジュアルは `blog/index.astro` と整合（hero 帯 + container-wide リスト）
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listProjects } from "../../lib/queries";
+
+const projects = await listProjects();
+---
+
+<BaseLayout title="Projects" description="これまでに取り組んだプロジェクト実績">
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <h1 class="text-3xl font-bold mb-2">Projects</h1>
+      <p class="text-sm text-text-secondary">
+        設計・実装・運用に関わったプロジェクトの実績一覧
+      </p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    {
+      projects.length === 0 ? (
+        <p class="text-text-muted">まだプロジェクトが登録されていません。</p>
+      ) : (
+        <div class="max-w-[45rem]">
+          {projects.map((project) => (
+            <article class="border-b border-border py-6 first:border-t">
+              <div class="text-xs text-text-muted mb-1">{project.period}</div>
+              <h2 class="text-xl font-semibold mb-2 leading-snug">
+                {project.url ? (
+                  <a
+                    href={project.url}
+                    class="text-text hover:text-accent"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {project.title}
+                  </a>
+                ) : (
+                  <span class="text-text">{project.title}</span>
+                )}
+              </h2>
+              <p class="text-sm text-text-secondary mb-2">{project.description}</p>
+              {project.tech.length > 0 && (
+                <div class="flex gap-2 flex-wrap text-xs">
+                  {project.tech.map((t) => (
+                    <span class="px-2 py-0.5 border border-border rounded-sm text-text-secondary">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )
+    }
+  </section>
+</BaseLayout>

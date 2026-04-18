@@ -1,0 +1,33 @@
+---
+/**
+ * 自己紹介（F-08）。pages コレクションの `about` エントリを Markdown レンダリング。
+ *
+ * ルール:
+ * - `astro:content` は queries/ 経由でのみ使用する（render() だけは Astro の規約に従いページで呼ぶ）
+ */
+import { render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getPageEntryBySlug } from "../lib/queries";
+
+const entry = await getPageEntryBySlug("about");
+if (!entry) {
+  throw new Error("pages コレクションに about が存在しません");
+}
+const { Content } = await render(entry);
+const { title, description } = entry.data;
+---
+
+<BaseLayout title={title} description={description}>
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <h1 class="text-3xl font-bold mb-2">{title}</h1>
+      <p class="text-sm text-text-secondary">{description}</p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    <article class="prose max-w-[45rem]">
+      <Content />
+    </article>
+  </section>
+</BaseLayout>

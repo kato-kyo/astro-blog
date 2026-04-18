@@ -7,4 +7,6 @@ export {
   listAllTags,
   listAllCategories,
 } from "./posts.js";
-export { toPost, toPostMeta, toAuthor } from "./mappers.js";
+export { getPageEntryBySlug } from "./pages.js";
+export { listProjects } from "./projects.js";
+export { toPost, toPostMeta, toAuthor, toPage, toProject } from "./mappers.js";
