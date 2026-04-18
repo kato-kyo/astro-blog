@@ -27,14 +27,15 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      # content/ は private submodule。
-      # `CONTENT_PAT` は private repo の read 権限を持つ Personal Access Token。
-      # 未設定の場合は checkout で失敗するので、リポジトリの Secrets に登録しておくこと。
+      # メインリポは default GITHUB_TOKEN で取得し、private submodule は CONTENT_PAT で別途取得。
+      # これにより CONTENT_PAT の権限を content repo のみに最小化できる。
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          token: ${{ secrets.CONTENT_PAT }}
+
+      - name: Checkout content submodule
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
+          git submodule update --init --recursive
 
       # pnpm を Node.js より先にインストールしておくことで setup-node の cache: 'pnpm' が機能する
       - name: Setup pnpm
