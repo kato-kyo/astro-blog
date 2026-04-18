@@ -60,8 +60,9 @@ const showDraftBadge = isDev && meta.draft;
   publishedAt={meta.publishedAt}
   updatedAt={meta.updatedAt}
   author={authorName}
+  sidebar
 >
-  <article class="content-prose py-10">
+  <article class="max-w-[45rem]">
     <header class="mb-8 pb-4 border-b border-border">
       <h1 class="text-3xl font-bold leading-snug mb-3">{meta.title}</h1>
       <div class="flex gap-3 flex-wrap text-xs text-text-muted">

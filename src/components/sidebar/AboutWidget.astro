@@ -1,0 +1,31 @@
+---
+/**
+ * About widget — サイドバー用の自己紹介ブロック（GP 風クラシック）。
+ *
+ * 参照:
+ * - docs/design.md §4.3 F-02（サイドバー構成）
+ * - docs/design.md §3.7（border-radius 3-4px・シャドウなし）
+ */
+import { SITE } from "../../config/site";
+---
+
+<section
+  aria-labelledby="sidebar-about-heading"
+  class="border border-border rounded-md bg-bg p-4"
+>
+  <h2
+    id="sidebar-about-heading"
+    class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider"
+  >
+    About
+  </h2>
+  <p class="text-sm text-text-secondary leading-relaxed mb-3">
+    <strong class="font-semibold text-text">{SITE.author}</strong>
+  </p>
+  <p class="text-sm text-text-secondary leading-relaxed mb-3">
+    {SITE.bio}
+  </p>
+  <p class="text-sm">
+    <a href="/about/">プロフィール詳細 &rarr;</a>
+  </p>
+</section>

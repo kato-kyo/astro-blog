@@ -9,6 +9,7 @@
 import "../styles/global.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import Sidebar from "../components/sidebar/Sidebar.astro";
 import { SITE } from "../config/site";
 
 type Props = {
@@ -34,6 +35,16 @@ type Props = {
   updatedAt?: Date;
   /** `article:author`（記事ページのみ。著者名） */
   author?: string;
+  /**
+   * 右サイドバー（About / Categories / Tags widget）を表示する（T3.2）。
+   * 既定は `false`。トップ・記事一覧・記事詳細などで明示的に `true` を指定する。
+   *
+   * レイアウトは 2 カラムグリッド（`lg:` 以上で本文 1fr + 右 280px）。
+   * 幅 1024px 未満ではサイドバーが本文の下に回り込む。
+   *
+   * Hero セクションなど画面幅いっぱいに広げたい要素は `<slot name="hero" />` に渡すこと。
+   */
+  sidebar?: boolean;
 };
 
 const {
@@ -47,6 +58,7 @@ const {
   publishedAt,
   updatedAt,
   author,
+  sidebar = false,
 } = Astro.props;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
 const canonicalHref = canonical ? canonical.toString() : undefined;
@@ -128,7 +140,23 @@ const ogImage = image ? image.toString() : undefined;
     </a>
     <Header />
     <main id="main" class="min-h-[60vh]">
-      <slot />
+      {/*
+        Hero など画面幅いっぱいに広げたい要素は `slot="hero"` に渡す。
+        本文（既定 slot）+ サイドバーは `container-wide` + grid でラップする。
+      */}
+      <slot name="hero" />
+      {
+        sidebar ? (
+          <div class="container-wide py-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-8 lg:gap-10">
+            <div class="min-w-0">
+              <slot />
+            </div>
+            <Sidebar />
+          </div>
+        ) : (
+          <slot />
+        )
+      }
     </main>
     <Footer />
   </body>
