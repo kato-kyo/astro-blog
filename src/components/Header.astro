@@ -1,9 +1,14 @@
 ---
 /**
  * サイトヘッダー（GP 風: static・ソリッド背景・nav padding 10px 20px・font-size 15px）。
+ *
+ * - ナビ右端に ThemeToggle（React island, `client:load`）を配置する。
+ *   FOUC 防止スクリプト（BaseLayout.astro §6.1）が走った直後から操作可能にしたいため
+ *   `client:load` 必須（`client:idle` / `client:visible` は NG）。
  */
 import { SITE } from "../config/site";
 import { MAIN_NAV } from "../config/nav";
+import ThemeToggle from "./ThemeToggle";
 ---
 
 <header class="bg-header-bg text-header-text border-b border-header-border">
@@ -11,7 +16,7 @@ import { MAIN_NAV } from "../config/nav";
     <a href="/" class="text-[1.1rem] font-bold tracking-tight text-header-text">
       {SITE.authorJa}
     </a>
-    <nav aria-label="主要ナビゲーション">
+    <nav aria-label="主要ナビゲーション" class="flex items-center">
       <ul class="flex gap-0 m-0 p-0 list-none items-center">
         {
           MAIN_NAV.map((item) => (
@@ -26,6 +31,9 @@ import { MAIN_NAV } from "../config/nav";
           ))
         }
       </ul>
+      <div class="ml-2">
+        <ThemeToggle client:load />
+      </div>
     </nav>
   </div>
 </header>
