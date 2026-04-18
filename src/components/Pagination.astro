@@ -1,0 +1,91 @@
+---
+/**
+ * ページネーション UI（Prev / ページ番号 / Next）。
+ *
+ * 要件 (requirements.md §6.5):
+ * - `/blog/`, `/tags/[tag]/`, `/categories/[category]/` で共通利用
+ * - URL 形式: 1 ページ目は `${basePath}/`, 2 ページ目以降は `${basePath}/page/[n]/`
+ *
+ * 設計方針:
+ * - SEO の `<link rel="canonical">`, `<link rel="prev">`, `<link rel="next">` は BaseLayout の props で出力する
+ *   （このコンポーネントは UI のみ担当）
+ */
+type Props = {
+  /** 現在のページ番号（1-indexed） */
+  currentPage: number;
+  /** 総ページ数 */
+  totalPages: number;
+  /** ベースパス。例 `/blog`, `/tags/astro`, `/categories/tech`。末尾スラッシュ不要 */
+  basePath: string;
+};
+
+const { currentPage, totalPages, basePath } = Astro.props;
+
+/** ページ番号から URL を構築する。1 ページ目は `${basePath}/`、それ以外は `${basePath}/page/[n]/` */
+function pageHref(page: number): string {
+  if (page <= 1) return `${basePath}/`;
+  return `${basePath}/page/${page}/`;
+}
+
+const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+const hasPrev = currentPage > 1;
+const hasNext = currentPage < totalPages;
+---
+
+{
+  totalPages > 1 && (
+    <nav class="flex items-center justify-center gap-2 py-8" aria-label="ページネーション">
+      {hasPrev ? (
+        <a
+          href={pageHref(currentPage - 1)}
+          class="px-3 py-1.5 border border-border rounded-sm text-sm text-accent hover:bg-accent hover:text-white hover:border-accent"
+          rel="prev"
+        >
+          &laquo; 前へ
+        </a>
+      ) : (
+        <span class="px-3 py-1.5 border border-border rounded-sm text-sm text-text-muted" aria-disabled="true">
+          &laquo; 前へ
+        </span>
+      )}
+
+      <ul class="flex items-center gap-1">
+        {pages.map((p) =>
+          p === currentPage ? (
+            <li>
+              <span
+                class="px-3 py-1.5 border border-accent rounded-sm text-sm bg-accent text-white"
+                aria-current="page"
+              >
+                {p}
+              </span>
+            </li>
+          ) : (
+            <li>
+              <a
+                href={pageHref(p)}
+                class="px-3 py-1.5 border border-border rounded-sm text-sm text-accent hover:bg-accent hover:text-white hover:border-accent"
+              >
+                {p}
+              </a>
+            </li>
+          ),
+        )}
+      </ul>
+
+      {hasNext ? (
+        <a
+          href={pageHref(currentPage + 1)}
+          class="px-3 py-1.5 border border-border rounded-sm text-sm text-accent hover:bg-accent hover:text-white hover:border-accent"
+          rel="next"
+        >
+          次へ &raquo;
+        </a>
+      ) : (
+        <span class="px-3 py-1.5 border border-border rounded-sm text-sm text-text-muted" aria-disabled="true">
+          次へ &raquo;
+        </span>
+      )}
+    </nav>
+  )
+}

@@ -14,10 +14,19 @@ import { SITE } from "../config/site";
 type Props = {
   title: string;
   description?: string;
+  /** `<link rel="canonical">` の URL。ページネーション等、正規 URL を明示したい場合に指定 */
+  canonical?: string | URL;
+  /** `<link rel="prev">` の URL（ページネーション） */
+  prev?: string | URL;
+  /** `<link rel="next">` の URL（ページネーション） */
+  next?: string | URL;
 };
 
-const { title, description = SITE.description } = Astro.props;
+const { title, description = SITE.description, canonical, prev, next } = Astro.props;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
+const canonicalHref = canonical ? canonical.toString() : undefined;
+const prevHref = prev ? prev.toString() : undefined;
+const nextHref = next ? next.toString() : undefined;
 ---
 
 <!doctype html>
@@ -29,6 +38,9 @@ const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
     <meta name="color-scheme" content="light dark" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    {canonicalHref && <link rel="canonical" href={canonicalHref} />}
+    {prevHref && <link rel="prev" href={prevHref} />}
+    {nextHref && <link rel="next" href={nextHref} />}
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
