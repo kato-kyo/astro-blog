@@ -60,3 +60,8 @@ jobs:
       # 直前の build ステップで生成された dist/ をそのまま使うため `test:smoke:only` を利用。
       - name: Smoke tests (dist/ verification)
         run: pnpm test:smoke:only
+
+      # Lighthouse CI: 4 ページを 3 回計測し median で閾値 90 を検証（F-30, §9.1）。
+      # Chromium は ubuntu-latest に preinstalled。dist/ を staticDistDir で直接計測するため別サーバー不要。
+      - name: Lighthouse CI (performance / a11y / best-practices / SEO >= 90)
+        run: pnpm lhci

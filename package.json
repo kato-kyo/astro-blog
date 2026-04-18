@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:smoke": "pnpm build && vitest run --config vitest.config.smoke.ts",
     "test:smoke:only": "vitest run --config vitest.config.smoke.ts",
+    "lhci": "lhci autorun",
     "astro": "astro"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^19.0.0",
