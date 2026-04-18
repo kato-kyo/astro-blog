@@ -1,0 +1,40 @@
+---
+/**
+ * 全カテゴリ一覧（F-06）。`listAllCategories()` が返す件数降順（同数は名前昇順）をそのまま表示する。
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { listAllCategories } from "../../lib/queries";
+
+const categories = await listAllCategories();
+---
+
+<BaseLayout title="Categories" description="カテゴリ一覧">
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <h1 class="text-3xl font-bold mb-2">Categories</h1>
+      <p class="text-sm text-text-secondary">記事のカテゴリ一覧</p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    {
+      categories.length === 0 ? (
+        <p class="text-text-muted">まだカテゴリがありません。</p>
+      ) : (
+        <ul class="max-w-[45rem] flex flex-col gap-2">
+          {categories.map((cat) => (
+            <li>
+              <a
+                href={`/categories/${cat.name}/`}
+                class="inline-flex items-center gap-2 px-3 py-1 border border-border rounded-sm text-sm text-text-secondary hover:bg-accent hover:text-white hover:border-accent"
+              >
+                <span>{cat.name}</span>
+                <span class="text-xs text-text-muted">({cat.count})</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</BaseLayout>
