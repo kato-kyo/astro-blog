@@ -27,6 +27,7 @@ const year = new Date().getFullYear();
         <ul class="list-none m-0 p-0 space-y-1">
           <li><a href="/rss.xml">RSS Feed</a></li>
           <li><a href={site.github} rel="me">GitHub</a></li>
+          {site.x && <li><a href={site.x} rel="me">X</a></li>}
         </ul>
       </div>
     </div>

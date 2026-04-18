@@ -20,10 +20,19 @@ const site = await getSite();
   <div class="container-wide flex flex-wrap items-center justify-between gap-y-2 min-h-[64px] py-2">
     <a
       href="/"
-      class="text-[1.1rem] font-bold tracking-tight text-header-text"
+      class="flex items-center gap-2 text-[1.1rem] font-bold tracking-tight text-header-text no-underline"
       aria-label={`${site.title} トップへ`}
     >
-      {site.authorJa}
+      <img
+        src="/images/avatar.png"
+        alt=""
+        width="32"
+        height="32"
+        class="h-8 w-8 shrink-0 rounded-full object-cover"
+        decoding="async"
+        loading="eager"
+      />
+      <span>{site.authorJa}</span>
     </a>
     <nav aria-label="主要ナビゲーション" class="flex items-center flex-wrap gap-y-1 max-w-full">
       <ul class="flex flex-wrap gap-x-1 gap-y-1 m-0 p-0 list-none items-center">
@@ -43,6 +52,30 @@ const site = await getSite();
       <div class="ml-2 flex items-center gap-1">
         <SearchTrigger />
         <ThemeToggle client:load />
+        {
+          site.x && (
+            <a
+              href={site.x}
+              rel="me noopener"
+              target="_blank"
+              aria-label="X (旧 Twitter)"
+              title="X"
+              class="inline-flex items-center justify-center w-9 h-9 rounded-sm opacity-90 hover:opacity-100 hover:bg-bg-secondary transition-colors no-underline"
+              style="color: var(--color-header-text)"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
+          )
+        }
       </div>
     </nav>
   </div>
