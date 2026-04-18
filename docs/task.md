@@ -71,12 +71,12 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T2.1 | ページネーション 共通ヘルパー + `/blog/page/[n]/` | ❌ |   |   |   | ヘルパーを `lib/policies/` or `lib/queries/` に作成 |
+| T2.1 | ページネーション 共通ヘルパー + `/blog/page/[n]/` | ❌ |   |   |   | `lib/policies/pagination.ts` + `Pagination.astro`（basePath で汎用化）+ 14 tests ✓ 2026-04-18 |
 | T2.2 | `/tags/[tag]/page/[n]/` | ⚠️ |   |   | ✓ | T2.1 のヘルパーに依存 |
 | T2.3 | `/categories/[category]/page/[n]/` | ⚠️ |   |   | ✓ | 同上 |
-| T2.4 | 記事詳細拡充（ToC + 読了時間 + 関連記事 UI 結線） | ❌ | ✓ |   |   | `/blog/[...slug].astro` に 3 改修。ロジック（`estimateReadingTime`, `findRelatedPosts`）は policies に実装・テスト済み。ToC のみ新規（Astro `headings` + React `client:idle`） |
-| T2.5 | スモークテスト（dist 検証: HTML/RSS/sitemap/OGP/draft 除外） | ✅ | ? | ? |   | `cheerio` 等 D の可能性。独立ディレクトリ |
-| T2.6 | 画像処理方針の決定と適用（`heroImage`） | ✅ |   | ? |   | Astro 標準 `Image`/`Picture` 採用可否、`content-sample` 画像の最適化。`sharp` は既に `onlyBuiltDependencies` 登録済み |
+| T2.4 | 記事詳細拡充（ToC + 読了時間 + 関連記事 UI 結線） | ❌ | ✓ |   |   | `/blog/[...slug].astro` + `ToC.tsx`（React client:idle, IntersectionObserver）✓ 2026-04-18 |
+| T2.5 | スモークテスト（dist 検証: HTML/RSS/sitemap/OGP/draft 除外） | ✅ | ? | ? |   | `tests/smoke/` + `test:smoke:only` + CI 組込み。cheerio dev 追加。OGP は T3.3 完了後に skip 解除 ✓ 2026-04-18 |
+| T2.6 | 画像処理方針の決定と適用（`heroImage`） | ✅ |   | ? |   | **保留**: content-sample に画像素材なし。実記事投入時に合わせて着手（Astro `Image` 採用可否含め） |
 
 **並列化方針**:
 - T2.1 を先に完了 → T2.2 と T2.3 を **2 agent 並列**
