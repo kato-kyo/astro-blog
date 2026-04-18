@@ -1,0 +1,57 @@
+# CI: 型チェック・ユニットテスト・ビルド検証
+#
+# - PR（全ブランチ）と main / develop への push で実行
+# - 同一 ref の古い実行は concurrency でキャンセル（Cloudflare Free tier のビルド数節約にも寄与）
+# - 詳細は docs/requirements.md §8.5 / §8.7 を参照
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+# 同じブランチの古い実行はキャンセル（ビルド数節約・フィードバック高速化）
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: check / test / build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # 現在は content/ submodule 未設定のため submodules: false。
+      # 将来 private な content submodule を追加した際は、以下に差し替える:
+      #   with:
+      #     submodules: recursive
+      #     token: ${{ secrets.CONTENT_PAT }}  # private repo 読み取り専用 PAT
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      # pnpm を Node.js より先にインストールしておくことで setup-node の cache: 'pnpm' が機能する
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (astro check)
+        run: pnpm check
+
+      - name: Unit tests (vitest)
+        run: pnpm test
+
+      - name: Build (astro build)
+        run: pnpm build
