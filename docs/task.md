@@ -93,7 +93,7 @@ merge 順序の調整と統合修正。
 |----|--------|:---:|:-:|:-:|:-:|------|
 | T3.1 | ダークモードトグル（React island + BaseLayout） | ❌ | ✓ |   |   | BaseLayout + 新規 React component |
 | T3.2 | 右サイドバー（About / Categories / Tags widget） | ❌ | ✓ |   |   | BaseLayout + 各一覧ページ |
-| T3.3 | OGP / メタタグ生成 | ❌ | ✓ |   |   | BaseLayout の `<head>` 変更 |
+| T3.3 | OGP / メタタグ生成 | ❌ | ✓ |   |   | BaseLayout に og:*, twitter:*, article:* を追加。smoke test の OGP skip 解除 ✓ 2026-04-18 |
 
 **並列化方針**: 3 タスクすべて `BaseLayout.astro` を触るため **互いに直列**。
 **推奨順**: `T3.3 OGP`（SEO 要件で優先度最高） → `T3.1 ダークモード`（既に FOUC 防止スクリプト実装済みのため差分小） → `T3.2 サイドバー`（レイアウト大変更）
