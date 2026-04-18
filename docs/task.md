@@ -47,8 +47,8 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T0.1 | agent 3 branch を develop に merge | ❌ | ✓ |   |   | sitemap-rss の lockfile を最初に取り込むと後続の依存整合が楽 |
-| T0.2 | sitemap に `/tags/*`, `/categories/*` URL を追記 | ❌ |   |   | ✓ | T0.1 完了後に実施 |
+| T0.1 | agent 3 branch を develop に merge | ❌ | ✓ |   |   | sitemap-rss の lockfile を最初に取り込むと後続の依存整合が楽 ✓ 2026-04-18 |
+| T0.2 | sitemap に `/tags/*`, `/categories/*` URL を追記 | ❌ |   |   | ✓ | T0.1 完了後に実施 ✓ 2026-04-18 |
 
 **推奨 merge 順**: `worktree-agent-a2d80006`（lockfile） → `worktree-agent-aa48d24e`（ページ群） → `worktree-agent-a746d5af`（CI）
 
@@ -58,9 +58,9 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T1.1 | `/about/` 固定ページ（pages コレクション） | ⚠️ | ✓ |   |   | `src/content.config.ts` を触る |
-| T1.2 | `/projects/` 固定ページ（projects コレクション） | ⚠️ | ✓ |   |   | 同上。新規 frontmatter スキーマ追加 |
-| T1.3 | `robots.txt.ts`（環境別 Allow/Disallow） | ✅ |   |   |   | `src/pages/robots.txt.ts` 新規のみ |
+| T1.1 | `/about/` 固定ページ（pages コレクション） | ⚠️ | ✓ |   |   | `src/content.config.ts` を触る ✓ 2026-04-18 |
+| T1.2 | `/projects/` 固定ページ（projects コレクション） | ⚠️ | ✓ |   |   | 同上。新規 frontmatter スキーマ追加 ✓ 2026-04-18 |
+| T1.3 | `robots.txt.ts`（環境別 Allow/Disallow） | ✅ |   |   |   | `src/pages/robots.txt.ts` 新規のみ ✓ 2026-04-18 |
 
 **並列化方針**: T1.1 と T1.2 は `content.config.ts` で F 衝突 → **1 agent に統合**。T1.3 はそれと並列可。
 **推奨**: 2 agent 並列（「T1.1+T1.2 統合」と「T1.3」）。
