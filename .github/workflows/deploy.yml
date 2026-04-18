@@ -45,26 +45,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ブランチに応じて PUBLIC_APP_ENV を切替（§8.3 環境別の振る舞い）
+      # ブランチに応じて PUBLIC_APP_ENV / PUBLIC_SITE_URL を切替（§8.3 環境別の振る舞い）
+      #
+      # PUBLIC_SITE_URL は sitemap / canonical / RSS / OGP の絶対 URL 生成に必須。
+      # 未設定だと astro.config.ts のフォールバック `https://example.com` が採用され致命的な不具合になるため、
+      # 明示的に環境ごとの URL を渡す。
       - name: Resolve environment
         id: env
         run: |
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "public_app_env=production" >> "$GITHUB_OUTPUT"
+            echo "public_site_url=https://katokyo.com" >> "$GITHUB_OUTPUT"
           else
             echo "public_app_env=preview" >> "$GITHUB_OUTPUT"
+            echo "public_site_url=https://develop.katokyo.pages.dev" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build
         env:
           PUBLIC_APP_ENV: ${{ steps.env.outputs.public_app_env }}
+          PUBLIC_SITE_URL: ${{ steps.env.outputs.public_site_url }}
         run: pnpm build
 
       # wrangler pages deploy で dist/ を Cloudflare Pages にアップロード。
-      # プロジェクト名は astro-blog を仮置き。Cloudflare 側で別名を使っている場合は projectName を調整。
+      # Cloudflare Pages プロジェクト名: katokyo
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=astro-blog --branch=${{ github.ref_name }}
+          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }}
