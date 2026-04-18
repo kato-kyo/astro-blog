@@ -92,7 +92,7 @@ merge 順序の調整と統合修正。
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
 | T3.1 | ダークモードトグル（React island + BaseLayout） | ❌ | ✓ |   |   | `ThemeToggle.tsx` (React client:load) + Header 配置 + 0.15s transition ✓ 2026-04-18 |
-| T3.2 | 右サイドバー（About / Categories / Tags widget） | ❌ | ✓ |   |   | BaseLayout + 各一覧ページ |
+| T3.2 | 右サイドバー（About / Categories / Tags widget） | ❌ | ✓ |   |   | `Sidebar.astro` + 3 widget、BaseLayout に sidebar props / named slot hero。lg: 2 カラム ✓ 2026-04-18 |
 | T3.3 | OGP / メタタグ生成 | ❌ | ✓ |   |   | BaseLayout に og:*, twitter:*, article:* を追加。smoke test の OGP skip 解除 ✓ 2026-04-18 |
 
 **並列化方針**: 3 タスクすべて `BaseLayout.astro` を触るため **互いに直列**。
