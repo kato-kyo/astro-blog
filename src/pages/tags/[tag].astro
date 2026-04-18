@@ -1,14 +1,20 @@
 ---
 /**
- * タグ別記事一覧（F-05）。`getStaticPaths` で全タグを静的生成する。
+ * タグ別記事一覧（F-05）— 1 ページ目。`getStaticPaths` で全タグを静的生成する。
  *
  * ルール:
  * - `params` にはタグ値そのものを渡す。URL エンコードは Astro が自動で行う
  * - 日本語タグ（例: "技術"）もそのまま `params` に渡せる
+ *
+ * 要件 (requirements.md §6.5):
+ * - 1 ページ 10 件。2 ページ目以降は `/tags/[tag]/page/[n]/`
+ * - `<link rel="canonical">`, `<link rel="next">` を BaseLayout の props で出力
  */
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostListItem from "../../components/PostListItem.astro";
+import Pagination from "../../components/Pagination.astro";
 import { listAllTags, listPostsByTag } from "../../lib/queries";
+import { paginate } from "../../lib/policies";
 
 export async function getStaticPaths() {
   const tags = await listAllTags();
@@ -20,28 +26,48 @@ export async function getStaticPaths() {
 
 const { tag } = Astro.props;
 const posts = await listPostsByTag(tag);
+const pageInfo = paginate(posts, 1);
+
+const basePath = `/tags/${tag}`;
+const canonical = new URL(`${basePath}/`, Astro.site);
+const nextUrl = pageInfo.hasNext
+  ? new URL(`${basePath}/page/2/`, Astro.site)
+  : undefined;
 ---
 
-<BaseLayout title={`Tag: ${tag}`} description={`"${tag}" タグの記事一覧`}>
+<BaseLayout
+  title={`Tag: ${tag}`}
+  description={`"${tag}" タグの記事一覧`}
+  canonical={canonical}
+  next={nextUrl}
+>
   <section class="bg-bg-secondary py-10 border-b border-border">
     <div class="container-wide">
       <p class="text-sm text-text-muted mb-1">
         <a href="/tags/" class="text-accent underline hover:no-underline">Tags</a>
       </p>
       <h1 class="text-3xl font-bold mb-2">#{tag}</h1>
-      <p class="text-sm text-text-secondary">{posts.length} 件の記事</p>
+      <p class="text-sm text-text-secondary">{pageInfo.total} 件の記事</p>
     </div>
   </section>
 
   <section class="container-wide py-10">
     {
-      posts.length === 0 ? (
+      pageInfo.total === 0 ? (
         <p class="text-text-muted">このタグの記事はまだありません。</p>
       ) : (
         <div class="max-w-[45rem]">
-          {posts.map((post) => <PostListItem post={post} headingLevel={2} showTags />)}
+          {pageInfo.items.map((post) => (
+            <PostListItem post={post} headingLevel={2} showTags />
+          ))}
         </div>
       )
     }
+
+    <Pagination
+      currentPage={pageInfo.page}
+      totalPages={pageInfo.totalPages}
+      basePath={basePath}
+    />
   </section>
 </BaseLayout>
