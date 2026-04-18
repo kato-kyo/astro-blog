@@ -10,8 +10,7 @@
  */
 import type { APIContext } from "astro";
 import rss from "@astrojs/rss";
-import { listPublishedPosts } from "../lib/queries";
-import { SITE } from "../config/site";
+import { getSite, listPublishedPosts } from "../lib/queries";
 
 export async function GET(context: APIContext): Promise<Response> {
   if (!context.site) {
@@ -20,11 +19,11 @@ export async function GET(context: APIContext): Promise<Response> {
     );
   }
 
-  const posts = await listPublishedPosts();
+  const [site, posts] = await Promise.all([getSite(), listPublishedPosts()]);
 
   return rss({
-    title: SITE.title,
-    description: SITE.description,
+    title: site.title,
+    description: site.description,
     site: context.site,
     items: posts.map((post) => ({
       title: post.title,

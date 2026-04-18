@@ -7,11 +7,13 @@
  *   ThemeToggle は `client:load` 必須（`client:idle` / `client:visible` は NG）。
  *   Search は Pagefind JS の遅延読込が前提のため `client:idle` で十分。
  */
-import { SITE } from "../config/site";
+import { getSite } from "../lib/queries";
 import { MAIN_NAV } from "../config/nav";
 import ThemeToggle from "./ThemeToggle";
 import Search from "./Search";
 import SearchTrigger from "./SearchTrigger.astro";
+
+const site = await getSite();
 ---
 
 <header class="bg-header-bg text-header-text border-b border-header-border">
@@ -19,9 +21,9 @@ import SearchTrigger from "./SearchTrigger.astro";
     <a
       href="/"
       class="text-[1.1rem] font-bold tracking-tight text-header-text"
-      aria-label={`${SITE.title} トップへ`}
+      aria-label={`${site.title} トップへ`}
     >
-      {SITE.authorJa}
+      {site.authorJa}
     </a>
     <nav aria-label="主要ナビゲーション" class="flex items-center flex-wrap gap-y-1 max-w-full">
       <ul class="flex flex-wrap gap-x-1 gap-y-1 m-0 p-0 list-none items-center">

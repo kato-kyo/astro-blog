@@ -6,7 +6,9 @@
  * - docs/design.md §4.3 F-02（サイドバー構成）
  * - docs/design.md §3.7（border-radius 3-4px・シャドウなし）
  */
-import { SITE } from "../../config/site";
+import { getSite } from "../../lib/queries";
+
+const site = await getSite();
 ---
 
 <section
@@ -20,10 +22,10 @@ import { SITE } from "../../config/site";
     About
   </h2>
   <p class="text-sm text-text-secondary leading-relaxed mb-3">
-    <strong class="font-semibold text-text">{SITE.author}</strong>
+    <strong class="font-semibold text-text">{site.author}</strong>
   </p>
   <p class="text-sm text-text-secondary leading-relaxed mb-3">
-    {SITE.bio}
+    {site.bio}
   </p>
   <p class="text-sm">
     <a href="/about/">プロフィール詳細 &rarr;</a>

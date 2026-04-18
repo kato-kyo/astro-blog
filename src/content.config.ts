@@ -81,4 +81,21 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { blog, authors, pages, projects };
+/**
+ * サイト全体のメタ情報。
+ * content-sample/config/site.json（または content/config/site.json）から読み込む。
+ * `id: "default"` のエントリを唯一の singleton として扱う。
+ */
+const site = defineCollection({
+  loader: file(`${contentRoot}/config/site.json`),
+  schema: z.object({
+    title: z.string().min(1),
+    description: z.string().min(1),
+    author: z.string().min(1),
+    authorJa: z.string().min(1),
+    bio: z.string().min(1),
+    github: z.url(),
+  }),
+});
+
+export const collections = { blog, authors, pages, projects, site };
