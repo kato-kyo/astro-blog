@@ -1,0 +1,49 @@
+---
+/**
+ * Categories widget — サイドバー用のカテゴリ一覧（件数付き）。
+ *
+ * - 件数降順 TOP N を表示し、全件は `/categories/` へのリンクで補完する
+ * - データ取得は queries 経由（astro:content 直参照禁止 / lib-architecture.md）
+ *
+ * 参照: docs/design.md §4.3 F-02（サイドバー構成）
+ */
+import { listAllCategories } from "../../lib/queries";
+
+/** サイドバーに表示する上限件数（GP 風の控えめな縦幅を維持） */
+const MAX_ITEMS = 6;
+
+const all = await listAllCategories();
+const items = all.slice(0, MAX_ITEMS);
+const hasMore = all.length > MAX_ITEMS;
+---
+
+{
+  all.length > 0 && (
+    <section
+      aria-labelledby="sidebar-categories-heading"
+      class="border border-border rounded-md bg-bg p-4"
+    >
+      <h2
+        id="sidebar-categories-heading"
+        class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider"
+      >
+        Categories
+      </h2>
+      <ul class="list-none m-0 p-0 space-y-1.5 text-sm">
+        {items.map((cat) => (
+          <li class="flex justify-between gap-2">
+            <a href={`/categories/${cat.name}/`} class="truncate">
+              {cat.name}
+            </a>
+            <span class="text-text-muted text-xs tabular-nums">({cat.count})</span>
+          </li>
+        ))}
+      </ul>
+      {hasMore && (
+        <p class="text-sm mt-3">
+          <a href="/categories/">もっと見る &rarr;</a>
+        </p>
+      )}
+    </section>
+  )
+}

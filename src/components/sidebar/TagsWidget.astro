@@ -1,0 +1,50 @@
+---
+/**
+ * Tags widget — サイドバー用の人気タグ一覧（tag pill 風）。
+ *
+ * - 件数降順 TOP N を pill スタイルで表示する（design.md §4.3 F-04/06）
+ * - データ取得は queries 経由（astro:content 直参照禁止 / lib-architecture.md）
+ */
+import { listAllTags } from "../../lib/queries";
+
+/** サイドバーに表示する上限件数（design.md §4.3 の記載に従い 10〜15 件） */
+const MAX_ITEMS = 15;
+
+const all = await listAllTags();
+const items = all.slice(0, MAX_ITEMS);
+const hasMore = all.length > MAX_ITEMS;
+---
+
+{
+  all.length > 0 && (
+    <section
+      aria-labelledby="sidebar-tags-heading"
+      class="border border-border rounded-md bg-bg p-4"
+    >
+      <h2
+        id="sidebar-tags-heading"
+        class="text-[0.941rem] font-bold text-text mb-3 uppercase tracking-wider"
+      >
+        Tags
+      </h2>
+      <ul class="list-none m-0 p-0 flex flex-wrap gap-1.5 text-xs">
+        {items.map((tag) => (
+          <li>
+            <a
+              href={`/tags/${tag.value}/`}
+              class="inline-block px-2 py-0.5 border border-border rounded-sm text-text-secondary hover:bg-accent hover:text-white hover:border-accent no-underline"
+            >
+              {tag.value}
+              <span class="text-text-muted ml-1 tabular-nums">({tag.count})</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      {hasMore && (
+        <p class="text-sm mt-3">
+          <a href="/tags/">もっと見る &rarr;</a>
+        </p>
+      )}
+    </section>
+  )
+}
