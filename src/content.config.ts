@@ -3,21 +3,15 @@
  *
  * 参照ルール:
  * - Zod は必ず `astro/zod` から import（`zod` 単体パッケージではない）
- * - `CONTENT_ROOT` 環境変数があればそれを優先。なければ submodule → content-sample の順でフォールバック
+ * - `content/` は git submodule（private repo）。未配置の開発環境では
+ *   `CONTENT_ROOT` 環境変数で別ディレクトリを指す運用を想定する
  * - requirements.md §5 のスキーマに準拠
  */
 import { defineCollection, reference } from "astro:content";
 import { glob, file } from "astro/loaders";
 import { z } from "astro/zod";
-import { existsSync } from "node:fs";
 
-function resolveContentRoot(): string {
-  const fromEnv = process.env.CONTENT_ROOT?.trim();
-  if (fromEnv) return fromEnv;
-  return existsSync("./content/blog") ? "./content" : "./content-sample";
-}
-
-const contentRoot = resolveContentRoot();
+const contentRoot = process.env.CONTENT_ROOT?.trim() || "./content";
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: `${contentRoot}/blog` }),

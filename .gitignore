@@ -13,6 +13,9 @@ node_modules/
 .worktrees/
 .claude/worktrees/
 
+# content-sample はローカル補助のみ（public repo には含めない）
+content-sample/
+
 # logs
 npm-debug.log*
 yarn-debug.log*

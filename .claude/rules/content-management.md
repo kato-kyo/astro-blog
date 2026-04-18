@@ -6,7 +6,11 @@ paths:
 
 # コンテンツ管理ルール
 
-content/ は git submodule（private repo）。content-sample/ はサンプル記事で submodule 外（public repo 同梱）。
+`content/` は git submodule（private repo）。実データはここに集約する。
+
+ローカル開発で submodule をまだ取得していない場合のみ、代替ディレクトリを
+`CONTENT_ROOT` 環境変数で指すことができる。その代替ディレクトリは public repo に
+含めない（gitignore 済み）。
 
 ## Frontmatter 必須フィールド
 
@@ -28,6 +32,8 @@ heroImage: string      # 任意
 
 ```
 content/                       # git submodule (private)
+├── config/
+│   └── site.json              # サイトメタ情報（id: "default" の 1 エントリ）
 ├── blog/
 │   └── my-first-post.md       # ファイル名 = スラッグ
 ├── pages/
@@ -37,12 +43,6 @@ content/                       # git submodule (private)
 │   └── authors.json           # 配列形式 [{ "id": "...", ... }]
 └── projects/                  # ポートフォリオ実績
     └── *.md
-
-content-sample/                # submodule 外 (public)
-├── blog/
-│   └── hello-world.md
-└── authors/
-    └── authors.json
 ```
 
 ## Content Collections 設定
@@ -51,14 +51,16 @@ content-sample/                # submodule 外 (public)
 // src/content.config.ts
 import { z } from "astro/zod";  // ← "zod" ではなく "astro/zod"
 
+const contentRoot = process.env.CONTENT_ROOT?.trim() || "./content";
+
 const blog = defineCollection({
-  loader: glob({ pattern: "**/*.md", base: "./content/blog" }),
+  loader: glob({ pattern: "**/*.md", base: `${contentRoot}/blog` }),
   schema: z.object({ /* ... */ }),
 });
 ```
 
 - Zod は必ず `astro/zod` から import
-- `base` は `./content/...`（submodule ディレクトリへの相対パス）
+- `base` は `${contentRoot}/...`（デフォルト `./content/...`、submodule ディレクトリ）
 - authors.json は配列形式（file() loader の仕様）
 
 ## Markdown / GFM
