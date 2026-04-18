@@ -116,7 +116,7 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T5.1 | ADR 追加（ページネーション方式・OGP 方針・Pagefind 採用等） | ✅ |   |   |   | `docs/adr/` 以下。独立 |
+| T5.1 | ADR 追加（ページネーション方式・OGP 方針・Pagefind 採用等） | ✅ |   |   |   | ADR-004〜007（ページネーション/OGP/Pagefind/ダークモード）を追加 ✓ 2026-04-18 |
 
 **並列化方針**: 他フェーズの実装中にも並行可能。
 
@@ -128,7 +128,7 @@ merge 順序の調整と統合修正。
 |----|--------|:---:|:-:|:-:|:-:|------|
 | T6.1 | レスポンシブ検証と調整（F-28） | ⚠️ | ✓ |   | ✓ | 全ページを `design.md` §5 のブレークポイントで検証。Playwright MCP + 実機で確認。T3.x 完了後が効率的 |
 | T6.2 | アクセシビリティ監査（F-29） | ⚠️ | ✓ |   | ✓ | セマンティック HTML、キーボードナビ、コントラスト比、skip link、ARIA。`axe` 的自動チェック + 手動検証。T3.2 サイドバー実装後が効率的 |
-| T6.3 | Lighthouse CI 導入（F-30） | ✅ |   | ✓ |   | `@lhci/cli` を devDependencies に追加、`.lighthouserc.json` 設定、GitHub Actions 組込み。閾値 90 以上を CI 失敗条件 |
+| T6.3 | Lighthouse CI 導入（F-30） | ✅ |   | ✓ |   | `@lhci/cli@0.15.1`、4 URL × 3 runs × 4 カテゴリ median 0.9、ci.yml 組込み ✓ 2026-04-18 |
 
 **並列化方針**: T6.3 は独立（✅）。T6.1 と T6.2 はフェーズ 3（UI 完成）後に実施するのが手戻り少。T6.3 はフェーズ 2 以降のいつでも着手可。
 
@@ -138,7 +138,7 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T7.1 | `.env.example` 作成 | ✅ |   |   |   | `PUBLIC_APP_ENV`, `PUBLIC_SITE_URL` など必要キーを雛形化 |
+| T7.1 | `.env.example` 作成 | ✅ |   |   |   | `PUBLIC_APP_ENV` / `PUBLIC_SITE_URL` + コメント付き将来用プレースホルダー ✓ 2026-04-18 |
 | T7.2 | content private repo 作成 + submodule 化（ADR-002, ADR-003） | ❌ | ✓ | ✓ | ✓ | `astro-blog-content` の新規リポジトリ作成 → `content-sample/` から移行 → `git submodule add`。`.gitmodules` / CI workflow の `submodules: recursive` + `CONTENT_PAT` 切替 |
 | T7.3 | Cloudflare Pages プロジェクト作成・環境変数設定 | ✅ |   |   |   | ダッシュボード作業。Git 連携自動デプロイは**無効化**（§8.6）。`PUBLIC_APP_ENV` を Production=production / Preview=preview |
 | T7.4 | カスタムドメイン設定 | ⚠️ |   |   | ✓ | T7.3 完了後。DNS / TLS 設定 |
