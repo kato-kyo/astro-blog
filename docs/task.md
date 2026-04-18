@@ -72,8 +72,8 @@ merge 順序の調整と統合修正。
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
 | T2.1 | ページネーション 共通ヘルパー + `/blog/page/[n]/` | ❌ |   |   |   | `lib/policies/pagination.ts` + `Pagination.astro`（basePath で汎用化）+ 14 tests ✓ 2026-04-18 |
-| T2.2 | `/tags/[tag]/page/[n]/` | ⚠️ |   |   | ✓ | T2.1 のヘルパーに依存 |
-| T2.3 | `/categories/[category]/page/[n]/` | ⚠️ |   |   | ✓ | 同上 |
+| T2.2 | `/tags/[tag]/page/[n]/` | ⚠️ |   |   | ✓ | T2.1 の `Pagination.astro` / `paginate` を再利用。日本語タグも自動エンコード ✓ 2026-04-18 |
+| T2.3 | `/categories/[category]/page/[n]/` | ⚠️ |   |   | ✓ | 同上。日本語カテゴリも percent-encode 確認 ✓ 2026-04-18 |
 | T2.4 | 記事詳細拡充（ToC + 読了時間 + 関連記事 UI 結線） | ❌ | ✓ |   |   | `/blog/[...slug].astro` + `ToC.tsx`（React client:idle, IntersectionObserver）✓ 2026-04-18 |
 | T2.5 | スモークテスト（dist 検証: HTML/RSS/sitemap/OGP/draft 除外） | ✅ | ? | ? |   | `tests/smoke/` + `test:smoke:only` + CI 組込み。cheerio dev 追加。OGP は T3.3 完了後に skip 解除 ✓ 2026-04-18 |
 | T2.6 | 画像処理方針の決定と適用（`heroImage`） | ✅ |   | ? |   | **保留**: content-sample に画像素材なし。実記事投入時に合わせて着手（Astro `Image` 採用可否含め） |
