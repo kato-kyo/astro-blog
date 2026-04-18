@@ -1,0 +1,368 @@
+# 開発タスク一覧
+
+未完了の実装タスクを、並列化判断付きで一覧化する。並列／直列の判断基準は `docs/notes/claude-code-worktree-parallel-dev.md` §9 を参照（※ `docs/notes/` はローカル専用で非コミット）。
+
+## 記法
+
+### 並列判定記号
+
+| 記号 | 意味 |
+|:---:|------|
+| ✅ | 並列実行可（他タスクとファイル・依存・情報すべて独立） |
+| ⚠️ | 条件付き並列（同じファイルに触れる可能性等で調整が必要） |
+| ❌ | 直列必須（同一ファイル編集・依存重複・情報依存） |
+
+### F/D/I 軸
+
+- **F (File)**: 同じファイルを編集するか
+- **D (Dependency)**: パッケージ追加を伴うか
+- **I (Information)**: 他タスクの成果物を参照するか
+
+---
+
+## 現在地（2026-04-18 時点）
+
+### 完了済み（main に merge 済み）
+
+- Astro 6 初期セットアップ + 3 層アーキテクチャ（`62a06ee`）
+- ルーティング: `/`, `/blog/`, `/blog/[...slug]/`
+- MDX サポート、GP 風デザイン
+- 38 tests pass、5 pages 生成
+
+### 実装済み・未 merge（agent branch）
+
+| ブランチ | 内容 |
+|---------|------|
+| `worktree-agent-aa48d24e` | F-04〜F-07 タグ/カテゴリページ（`/tags/*`, `/categories/*`） |
+| `worktree-agent-a2d80006` | F-25, F-26 sitemap/RSS（`@astrojs/rss` 依存追加、`package.json` 変更あり） |
+| `worktree-agent-a746d5af` | GitHub Actions（CI + Cloudflare Pages deploy） |
+
+`develop` への merge と、sitemap への tags/categories URL 統合がフェーズ 0 の下地作業となる。
+
+---
+
+## フェーズ 0: 下地作業（直列必須）
+
+merge 順序の調整と統合修正。
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T0.1 | agent 3 branch を develop に merge | ❌ | ✓ |   |   | sitemap-rss の lockfile を最初に取り込むと後続の依存整合が楽 |
+| T0.2 | sitemap に `/tags/*`, `/categories/*` URL を追記 | ❌ |   |   | ✓ | T0.1 完了後に実施 |
+
+**推奨 merge 順**: `worktree-agent-a2d80006`（lockfile） → `worktree-agent-aa48d24e`（ページ群） → `worktree-agent-a746d5af`（CI）
+
+---
+
+## フェーズ 1: 独立ページ追加
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T1.1 | `/about/` 固定ページ（pages コレクション） | ⚠️ | ✓ |   |   | `src/content.config.ts` を触る |
+| T1.2 | `/projects/` 固定ページ（projects コレクション） | ⚠️ | ✓ |   |   | 同上。新規 frontmatter スキーマ追加 |
+| T1.3 | `robots.txt.ts`（環境別 Allow/Disallow） | ✅ |   |   |   | `src/pages/robots.txt.ts` 新規のみ |
+
+**並列化方針**: T1.1 と T1.2 は `content.config.ts` で F 衝突 → **1 agent に統合**。T1.3 はそれと並列可。
+**推奨**: 2 agent 並列（「T1.1+T1.2 統合」と「T1.3」）。
+
+---
+
+## フェーズ 2: 機能追加
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T2.1 | ページネーション 共通ヘルパー + `/blog/page/[n]/` | ❌ |   |   |   | ヘルパーを `lib/policies/` or `lib/queries/` に作成 |
+| T2.2 | `/tags/[tag]/page/[n]/` | ⚠️ |   |   | ✓ | T2.1 のヘルパーに依存 |
+| T2.3 | `/categories/[category]/page/[n]/` | ⚠️ |   |   | ✓ | 同上 |
+| T2.4 | 記事詳細拡充（ToC + 読了時間 + 関連記事 UI 結線） | ❌ | ✓ |   |   | `/blog/[...slug].astro` に 3 改修。ロジック（`estimateReadingTime`, `findRelatedPosts`）は policies に実装・テスト済み。ToC のみ新規（Astro `headings` + React `client:idle`） |
+| T2.5 | スモークテスト（dist 検証: HTML/RSS/sitemap/OGP/draft 除外） | ✅ | ? | ? |   | `cheerio` 等 D の可能性。独立ディレクトリ |
+| T2.6 | 画像処理方針の決定と適用（`heroImage`） | ✅ |   | ? |   | Astro 標準 `Image`/`Picture` 採用可否、`content-sample` 画像の最適化。`sharp` は既に `onlyBuiltDependencies` 登録済み |
+
+**並列化方針**:
+- T2.1 を先に完了 → T2.2 と T2.3 を **2 agent 並列**
+- T2.4 は独立。**他と並列可**（ただし agent 内での改修は順次適用）
+- T2.5 は T2.1〜T2.4 いずれとも並列可（ビルド後の検証スクリプト）
+
+**推奨 3 並列構成**: `T2.2` / `T2.3` / `T2.5` を 1 メッセージで 3 agent 起動。
+
+---
+
+## フェーズ 3: レイアウト・UI（BaseLayout 競合で直列）
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T3.1 | ダークモードトグル（React island + BaseLayout） | ❌ | ✓ |   |   | BaseLayout + 新規 React component |
+| T3.2 | 右サイドバー（About / Categories / Tags widget） | ❌ | ✓ |   |   | BaseLayout + 各一覧ページ |
+| T3.3 | OGP / メタタグ生成 | ❌ | ✓ |   |   | BaseLayout の `<head>` 変更 |
+
+**並列化方針**: 3 タスクすべて `BaseLayout.astro` を触るため **互いに直列**。
+**推奨順**: `T3.3 OGP`（SEO 要件で優先度最高） → `T3.1 ダークモード`（既に FOUC 防止スクリプト実装済みのため差分小） → `T3.2 サイドバー`（レイアウト大変更）
+
+※ フェーズ 2 の T2.5（スモーク）とは並列可能。
+
+---
+
+## フェーズ 4: 横断機能
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T4.1 | Pagefind 全文検索（モーダル + index 生成） | ✅ |   | ✓ |   | `pagefind` 依存追加。他 D タスクと同時実行しない |
+
+**並列化方針**: 依存追加を伴うため、他の D タスクがない時期に単独 agent で実施。モーダル UI は React island。
+
+---
+
+## フェーズ 5: ドキュメント
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T5.1 | ADR 追加（ページネーション方式・OGP 方針・Pagefind 採用等） | ✅ |   |   |   | `docs/adr/` 以下。独立 |
+
+**並列化方針**: 他フェーズの実装中にも並行可能。
+
+---
+
+## フェーズ 6: 非機能要件（F-28〜F-30）
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T6.1 | レスポンシブ検証と調整（F-28） | ⚠️ | ✓ |   | ✓ | 全ページを `design.md` §5 のブレークポイントで検証。Playwright MCP + 実機で確認。T3.x 完了後が効率的 |
+| T6.2 | アクセシビリティ監査（F-29） | ⚠️ | ✓ |   | ✓ | セマンティック HTML、キーボードナビ、コントラスト比、skip link、ARIA。`axe` 的自動チェック + 手動検証。T3.2 サイドバー実装後が効率的 |
+| T6.3 | Lighthouse CI 導入（F-30） | ✅ |   | ✓ |   | `@lhci/cli` を devDependencies に追加、`.lighthouserc.json` 設定、GitHub Actions 組込み。閾値 90 以上を CI 失敗条件 |
+
+**並列化方針**: T6.3 は独立（✅）。T6.1 と T6.2 はフェーズ 3（UI 完成）後に実施するのが手戻り少。T6.3 はフェーズ 2 以降のいつでも着手可。
+
+---
+
+## フェーズ 7: 運用整備
+
+| ID | タスク | 並列判定 | F | D | I | 備考 |
+|----|--------|:---:|:-:|:-:|:-:|------|
+| T7.1 | `.env.example` 作成 | ✅ |   |   |   | `PUBLIC_APP_ENV`, `PUBLIC_SITE_URL` など必要キーを雛形化 |
+| T7.2 | content private repo 作成 + submodule 化（ADR-002, ADR-003） | ❌ | ✓ | ✓ | ✓ | `astro-blog-content` の新規リポジトリ作成 → `content-sample/` から移行 → `git submodule add`。`.gitmodules` / CI workflow の `submodules: recursive` + `CONTENT_PAT` 切替 |
+| T7.3 | Cloudflare Pages プロジェクト作成・環境変数設定 | ✅ |   |   |   | ダッシュボード作業。Git 連携自動デプロイは**無効化**（§8.6）。`PUBLIC_APP_ENV` を Production=production / Preview=preview |
+| T7.4 | カスタムドメイン設定 | ⚠️ |   |   | ✓ | T7.3 完了後。DNS / TLS 設定 |
+| T7.5 | GitHub Actions の secrets 登録（`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, 将来 `CONTENT_PAT`） | ✅ |   |   |   | リポジトリ側の作業のみ |
+
+**並列化方針**: T7.2 は submodule 化で複数ファイル（`.gitmodules`, CI yml, `content.config.ts` の loader path）を触るため単独 agent 推奨。T7.1/T7.3/T7.5 は独立で並列可。T7.4 は T7.3 依存。
+
+**実施タイミング**: T7.1 はフェーズ 0 と並行で早期に実施推奨。T7.2 はコンテンツが充実した段階（フェーズ 3〜4 後）。T7.3〜T7.5 は初回デプロイ前に必須。
+
+---
+
+## 推奨実行順序（依存グラフ）
+
+```mermaid
+graph TD
+    P0_1[T0.1 merge 3 branch<br/>❌ 直列]
+    P0_2[T0.2 sitemap URL 統合<br/>❌ 直列]
+
+    P1_12[T1.1+T1.2 統合 agent<br/>⚠️ content.config.ts 併合]
+    P1_3[T1.3 robots.txt<br/>✅ 並列]
+
+    P2_1[T2.1 pagination helper + /blog/<br/>❌ 下地]
+    P2_2[T2.2 /tags/ pagination<br/>⚠️ T2.1 依存]
+    P2_3[T2.3 /categories/ pagination<br/>⚠️ T2.1 依存]
+    P2_4[T2.4 記事詳細拡充<br/>❌ 単一ファイル 3 改修]
+    P2_5[T2.5 smoke test<br/>✅ 並列]
+
+    P3_3[T3.3 OGP<br/>❌ BaseLayout]
+    P3_1[T3.1 ダークモード<br/>❌ BaseLayout]
+    P3_2[T3.2 サイドバー<br/>❌ BaseLayout]
+
+    P2_6[T2.6 画像処理<br/>✅ 並列]
+
+    P4_1[T4.1 Pagefind<br/>✅ 依存追加あり]
+
+    P5_1[T5.1 ADR 追加<br/>✅ 並列]
+
+    P6_1[T6.1 レスポンシブ検証<br/>⚠️ UI 完成後]
+    P6_2[T6.2 a11y 監査<br/>⚠️ UI 完成後]
+    P6_3[T6.3 Lighthouse CI<br/>✅ 並列]
+
+    P7_1[T7.1 .env.example<br/>✅ 並列]
+    P7_2[T7.2 content submodule<br/>❌ 単独 agent]
+    P7_3[T7.3 CF Pages 設定<br/>✅ 手動作業]
+    P7_4[T7.4 カスタムドメイン<br/>⚠️ T7.3 依存]
+    P7_5[T7.5 GitHub secrets<br/>✅ 手動作業]
+
+    P0_1 --> P0_2
+    P0_2 --> P1_12
+    P0_2 --> P1_3
+    P1_12 --> P2_1
+    P1_3 -.並列可.-> P2_5
+    P2_1 --> P2_2
+    P2_1 --> P2_3
+    P2_2 --> P2_4
+    P2_3 --> P2_4
+    P2_4 --> P2_6
+    P2_4 --> P3_3
+    P3_3 --> P3_1
+    P3_1 --> P3_2
+    P3_2 --> P4_1
+    P4_1 --> P5_1
+    P3_2 --> P6_1
+    P3_2 --> P6_2
+    P2_1 -.並列可.-> P6_3
+    P0_1 -.早期.-> P7_1
+    P4_1 -.後期.-> P7_2
+    P7_3 --> P7_4
+    P6_3 --> P7_5
+
+    style P0_1 fill:#fdd
+    style P0_2 fill:#fdd
+    style P1_12 fill:#ffd
+    style P1_3 fill:#dfd
+    style P2_1 fill:#fdd
+    style P2_2 fill:#ffd
+    style P2_3 fill:#ffd
+    style P2_4 fill:#fdd
+    style P2_5 fill:#dfd
+    style P2_6 fill:#dfd
+    style P3_3 fill:#fdd
+    style P3_1 fill:#fdd
+    style P3_2 fill:#fdd
+    style P4_1 fill:#dfd
+    style P5_1 fill:#dfd
+    style P6_1 fill:#ffd
+    style P6_2 fill:#ffd
+    style P6_3 fill:#dfd
+    style P7_1 fill:#dfd
+    style P7_2 fill:#fdd
+    style P7_3 fill:#dfd
+    style P7_4 fill:#ffd
+    style P7_5 fill:#dfd
+```
+
+## 並列起動の具体パターン
+
+| 時期 | 並列グループ | 想定 agent 数 |
+|------|------------|:---:|
+| フェーズ 0 開始時 | `T0.1 merge` / `T7.1 .env.example`（人手） | 1 + 手動 |
+| フェーズ 1 開始時 | `T1.1+T1.2 統合` / `T1.3` | 2 |
+| フェーズ 2 中盤（T2.1 完了後） | `T2.2` / `T2.3` / `T2.5` / `T2.6` | 3〜4 |
+| フェーズ 2 終盤 | `T2.4 UI 結線` + `T6.3 Lighthouse CI` | 2 |
+| フェーズ 3 進行中 | `T3.x（直列）` + `T5.1 ADR` | 2 |
+| フェーズ 3 完了後 | `T6.1 レスポンシブ` / `T6.2 a11y` | 2 |
+| 初回デプロイ前 | `T7.3` / `T7.5`（いずれも手動作業） | 並列手作業 |
+
+**上限目安**: 同時 agent 数は 3〜5。メインセッションの context 負荷と統合判断の余裕を確保するため。
+
+---
+
+## 個々のタスクの開発フロー
+
+1 タスクを実装するときの標準手順。直列・並列を問わず共通。
+
+### ステップ 1: 実装前準備
+
+1. **要件確認**: `docs/requirements.md` の該当機能番号（F-xx）を読む。未記載なら本 `task.md` の備考欄を参照
+2. **既存コード把握**: 変更対象ファイルと、その呼び出し元・依存先を `Grep` / `Read` で確認
+3. **F/D/I 再判定**: タスクを受け取った時点での判定が現状のコードベースと整合するか再確認（他タスクが先に merge されて変わっている可能性）
+4. **ブランチ戦略決定**: 並列なら agent worktree、直列なら `feat/xxx` を `develop` から切る
+
+### ステップ 2: 実装方針の決定
+
+| 判定 | 方針 |
+|------|------|
+| ✅ 並列 | `Agent(isolation: "worktree")` で起動。1 メッセージに複数並べる |
+| ⚠️ 条件付き | 依存タスクが完了しているか確認。情報依存なら統合 step を計画に含める |
+| ❌ 直列 | メインセッションまたは単独 agent で順次実施 |
+
+### ステップ 3: TDD サイクル（`.claude/rules/tdd-workflow.md` 準拠）
+
+`policies` / `queries` の純粋関数変更を伴うタスクでは Red → Green → Refactor：
+
+1. **Red**: `tests/policies/xxx.test.ts` に失敗テストを追加
+2. **Green**: 最小限の実装でテストを通す
+3. **Refactor**: 命名・重複を整理
+
+ページ追加のみのタスク（テスト不要）はステップ 4 に直行。逆に policies/queries を触るなら必ず Red から始める。
+
+### ステップ 4: 検証（必須）
+
+```bash
+pnpm check    # 型エラー 0（ローカル最速フィードバック）
+pnpm test     # 既存テスト継続パス
+pnpm build    # 全ページ生成成功、想定した新規ページが含まれるか目視
+```
+
+UI 変更がある場合は追加で Playwright MCP でブラウザ確認（`docs/design.md` §9 のデザイントークンを視覚的に検証）。
+
+### ステップ 4.5: コードレビュー（重要）
+
+機械的検証（step 4）を通過したら、**品質レビュー**を実施：
+
+| ツール | 用途 | タイミング |
+|--------|------|----------|
+| `/simplify` スキル | 変更差分を読み、重複・過剰抽象・不要な防御コードを検出 | 機能完成後、commit 前 |
+| `/codex-review` スキル | 別 LLM（Codex）に設計・ロジックの第三者レビュー | 非自明な判断が含まれる変更に適用 |
+| `/review` / `/security-review` | コードレビュー・セキュリティ観点 | 大きめの機能、認証や入力処理を含む場合 |
+
+レビュー結果に基づき修正 → 再度 step 4（検証）→ commit。指摘が軽微なら同一 commit に統合、構造変更なら別 commit。
+
+前セッションの実例: 初期セットアップでは `simplify` + `codex-review` の両方を通して、入れ子 slug と MDX 除外の修正指摘を反映した。
+
+### ステップ 5: commit
+
+- Conventional Commits（`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `ci:`）
+- 1 機能 = 1 commit を基本。リファクタリングは別 commit に分離
+- 日本語メッセージ可（既存履歴に合わせる）
+
+### ステップ 6: merge（戦略選択）
+
+`docs/notes/claude-code-worktree-parallel-dev.md` §7 の 3 戦略から選ぶ。本プロジェクトのデフォルト：
+
+- **通常の feature**: 戦略 B（feature ブランチ rename → PR → `develop` 経由）
+- **agent worktree からの小規模追加**: 戦略 A（直接 merge）
+- **ベースブランチのズレ修正が必要**: 戦略 C（cherry-pick）
+
+### ステップ 7: 進捗更新
+
+1. 本 `task.md` の該当行末尾に `✓ YYYY-MM-DD` を追記
+2. 新たに気づいたタスクは該当フェーズに追加
+3. 依存関係が変わったら mermaid 図を更新
+
+---
+
+## agent 起動時のプロンプトテンプレート
+
+並列タスクで subagent を使う場合、以下のブロックを毎回プロンプトに含める。経験上、これらが欠けると agent が規約を破ったり既存 API を重複実装する：
+
+```markdown
+【まず読むもの】
+1. CLAUDE.md
+2. docs/requirements.md（該当機能番号）
+3. .claude/rules/*.md（lib-architecture, astro-conventions, coding-standards, tdd-workflow）
+4. 既存の関連コード（具体的なファイルパスを列挙）
+
+【制約】
+- astro:content は src/lib/queries 経由でのみ使用
+- バージョン変更禁止。新規依存追加は最小限、package.json/lockfile を必ず commit
+- 既存アーキテクチャ（3 層）を遵守
+
+【検証】
+pnpm check / pnpm test / pnpm build すべて通過
+
+【完了後】
+- `git add -A && git commit -m "<Conventional Commits 形式>"`
+- ブランチはそのまま残す
+- 200 語以内で追加ファイル・ビルド結果を報告
+```
+
+※ 並列 agent は**互いを認識しない**。情報依存があるなら「統合 step を別途計画する」ことを前提にプロンプト設計する（`docs/notes/claude-code-worktree-parallel-dev.md` §9.4 参照）。
+
+---
+
+## 進捗管理
+
+- タスク完了時は本ファイル該当行の末尾に `✓ YYYY-MM-DD` を追記
+- ブランチ命名で混乱が出た場合は `docs/notes/claude-code-worktree-parallel-dev.md` §7（merge 戦略）を参照
+- 新規タスクが発生したら該当フェーズの末尾に追加。フェーズ間の順序が崩れる変更は mermaid 図も更新
+
+## 参照
+
+- `docs/requirements.md` — 要件定義（F-01〜F-30）
+- `docs/design.md` — UI デザイン
+- `docs/adr/` — アーキテクチャ決定記録
+- `docs/notes/claude-code-worktree-parallel-dev.md`（ローカル専用）— 並列開発ガイド
