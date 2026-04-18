@@ -57,6 +57,4 @@ describe("smoke: article <head> (§7.2)", () => {
   });
 });
 
-// TODO(T4.1): Pagefind 全文検索の導入後、以下のスモークテストを追加する:
-//   - `dist/pagefind/pagefind.js` 等の検索インデックスファイルが生成されていること
-//   - draft 記事が検索インデックスに含まれていないこと
+// T4.1 Pagefind 全文検索のスモークテストは `tests/smoke/pagefind.test.ts` に追加済み。
