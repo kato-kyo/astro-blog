@@ -1,0 +1,84 @@
+---
+/**
+ * タグ別記事一覧（F-05）— 2 ページ目以降。
+ *
+ * 要件 (requirements.md §6.5):
+ * - URL: `/tags/[tag]/page/2/`, `/tags/[tag]/page/3/`, ...
+ * - `getStaticPaths` で全タグ × 各タグの 2 ページ目以降を Cartesian 展開
+ * - 総件数が 1 ページに収まるタグは何も生成されない（1 ページ目のみ）
+ * - `<link rel="canonical">`, `<link rel="prev">`, `<link rel="next">` を BaseLayout に渡す
+ */
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import PostListItem from "../../../../components/PostListItem.astro";
+import Pagination from "../../../../components/Pagination.astro";
+import { listAllTags, listPostsByTag } from "../../../../lib/queries";
+import { paginate, buildPagePaths } from "../../../../lib/policies";
+
+export const getStaticPaths = (async () => {
+  const tags = await listAllTags();
+  const results = await Promise.all(
+    tags.map(async (tag) => {
+      const posts = await listPostsByTag(tag.value);
+      const pages = buildPagePaths(posts.length);
+      return pages.map((page) => ({
+        params: { tag: tag.value, page: String(page) },
+        props: { tag: tag.value, page },
+      }));
+    }),
+  );
+  return results.flat();
+}) satisfies GetStaticPaths;
+
+type Props = { tag: string; page: number };
+
+const { tag, page } = Astro.props;
+const posts = await listPostsByTag(tag);
+const pageInfo = paginate(posts, page);
+
+const basePath = `/tags/${tag}`;
+const canonical = new URL(`${basePath}/page/${page}/`, Astro.site);
+const prevUrl = pageInfo.hasPrev
+  ? new URL(
+      page - 1 === 1 ? `${basePath}/` : `${basePath}/page/${page - 1}/`,
+      Astro.site,
+    )
+  : undefined;
+const nextUrl = pageInfo.hasNext
+  ? new URL(`${basePath}/page/${page + 1}/`, Astro.site)
+  : undefined;
+---
+
+<BaseLayout
+  title={`Tag: ${tag} (page ${page})`}
+  description={`"${tag}" タグの記事一覧`}
+  canonical={canonical}
+  prev={prevUrl}
+  next={nextUrl}
+>
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <p class="text-sm text-text-muted mb-1">
+        <a href="/tags/" class="text-accent underline hover:no-underline">Tags</a>
+      </p>
+      <h1 class="text-3xl font-bold mb-2">#{tag}</h1>
+      <p class="text-sm text-text-secondary">
+        ページ {page} / {pageInfo.totalPages}（全 {pageInfo.total} 件）
+      </p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    <div class="max-w-[45rem]">
+      {pageInfo.items.map((post) => (
+        <PostListItem post={post} headingLevel={2} showTags />
+      ))}
+    </div>
+
+    <Pagination
+      currentPage={pageInfo.page}
+      totalPages={pageInfo.totalPages}
+      basePath={basePath}
+    />
+  </section>
+</BaseLayout>
