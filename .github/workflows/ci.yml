@@ -57,7 +57,11 @@ jobs:
       - name: Unit tests (vitest)
         run: pnpm test
 
+      # Lighthouse CI を本番同等の出力で計測するため production env を渡す
       - name: Build (astro build)
+        env:
+          PUBLIC_APP_ENV: production
+          PUBLIC_SITE_URL: https://katokyo.com
         run: pnpm build
 
       # ビルド成果物 `dist/` を再利用し、スモーク観点（§7.2）を検証する。
