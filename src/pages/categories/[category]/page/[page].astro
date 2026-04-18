@@ -1,0 +1,84 @@
+---
+/**
+ * カテゴリ別記事一覧（F-07）— 2 ページ目以降。
+ *
+ * 要件 (requirements.md §6.5):
+ * - URL: `/categories/[category]/page/2/`, `/page/3/`, ...
+ * - `getStaticPaths` で全カテゴリ × `buildPagePaths` の Cartesian 展開
+ * - 1 ページに収まるカテゴリはここから何も生成されない（`[category].astro` のみ）
+ * - `<link rel="canonical">`, `<link rel="prev">`, `<link rel="next">` を BaseLayout に渡す
+ */
+import type { GetStaticPaths } from "astro";
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import PostListItem from "../../../../components/PostListItem.astro";
+import Pagination from "../../../../components/Pagination.astro";
+import { listAllCategories, listPostsByCategory } from "../../../../lib/queries";
+import { paginate, buildPagePaths } from "../../../../lib/policies";
+
+export const getStaticPaths = (async () => {
+  const categories = await listAllCategories();
+  const entries = await Promise.all(
+    categories.map(async (cat) => {
+      const posts = await listPostsByCategory(cat.name);
+      const pages = buildPagePaths(posts.length);
+      return pages.map((page) => ({
+        params: { category: cat.name, page: String(page) },
+        props: { category: cat.name, page },
+      }));
+    }),
+  );
+  return entries.flat();
+}) satisfies GetStaticPaths;
+
+type Props = { category: string; page: number };
+
+const { category, page } = Astro.props;
+const posts = await listPostsByCategory(category);
+const pageInfo = paginate(posts, page);
+
+const basePath = `/categories/${category}`;
+const canonical = new URL(`${basePath}/page/${page}/`, Astro.site);
+const prevUrl = pageInfo.hasPrev
+  ? new URL(
+      page - 1 === 1 ? `${basePath}/` : `${basePath}/page/${page - 1}/`,
+      Astro.site,
+    )
+  : undefined;
+const nextUrl = pageInfo.hasNext
+  ? new URL(`${basePath}/page/${page + 1}/`, Astro.site)
+  : undefined;
+---
+
+<BaseLayout
+  title={`Category: ${category} (page ${page})`}
+  description={`"${category}" カテゴリの記事一覧`}
+  canonical={canonical}
+  prev={prevUrl}
+  next={nextUrl}
+>
+  <section class="bg-bg-secondary py-10 border-b border-border">
+    <div class="container-wide">
+      <p class="text-sm text-text-muted mb-1">
+        <a href="/categories/" class="text-accent underline hover:no-underline">Categories</a>
+      </p>
+      <h1 class="text-3xl font-bold mb-2">{category}</h1>
+      <p class="text-sm text-text-secondary">
+        ページ {page} / {pageInfo.totalPages}（全 {pageInfo.total} 件）
+      </p>
+    </div>
+  </section>
+
+  <section class="container-wide py-10">
+    <div class="max-w-[45rem]">
+      {pageInfo.items.map((post) => (
+        <PostListItem post={post} headingLevel={2} showTags />
+      ))}
+    </div>
+
+    <Pagination
+      currentPage={pageInfo.page}
+      totalPages={pageInfo.totalPages}
+      basePath={basePath}
+    />
+  </section>
+</BaseLayout>
