@@ -56,5 +56,36 @@
       "Read(**/.env)",
       "Read(**/.env.*)"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": ["codex"],
+    "enableWeakerNetworkIsolation": true,
+    "filesystem": {
+      "allowWrite": [
+        "~/Library/pnpm/store/**",
+        "~/.npm/**",
+        "~/.cache/codex/**",
+        "~/.codex/**"
+      ]
+    },
+    "network": {
+      "allowLocalBinding": true,
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "*.npmjs.org",
+        "fonts.googleapis.com",
+        "fonts.gstatic.com",
+        "mcp.docs.astro.build",
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "raw.githubusercontent.com",
+        "objects.githubusercontent.com",
+        "api.openai.com",
+        "*.openai.com"
+      ]
+    }
   }
 }
