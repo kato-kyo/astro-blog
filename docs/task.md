@@ -184,9 +184,9 @@ zenn-pub から移行した記事の `:::message`・`:::details` を Astro の r
 | T9.1 | remark-directive 導入 + 自作 handler 実装 | ❌ | ✓ | ✓ |   | `remark-directive@4.0.0` + `@types/mdast` / `@types/unist` / `mdast-util-directive`。`src/lib/markdown/directives.ts` 実装 + 10 unit tests。`:::message`/`:::note`/`:::details` を `<aside>`/`<details>` に展開 ✓ 2026-04-18 |
 | T9.2 | Zenn 風 callout CSS を追加 | ✅ | ✓ |   |   | `.msg` (border-left accent / info / warn / alert) + `details.callout` + dark 微調整 + prose 余白調整 ✓ 2026-04-18 |
 | T9.3 | 既存記事の `:::details <label>` を remark-directive 仕様に正規化 | ⚠️ | ✓ |   | ✓ | `:::details label` は remark-directive が認識しないため `:::details[label]` に書き換え。f5677ad1683bbd.md の 3 箇所。`:::message alert` は handler fallback で吸収し書き換え不要 ✓ 2026-04-18 |
-| T9.4 | 各記事の description を記事内容から書き起こし | ⚠️ | ✓ |   |   | 24 記事を Claude が読んで 1-2 文の要約を作成。agent 並列（1 agent あたり 5〜6 記事）で分割実施 |
+| T9.4 | 各記事の description を記事内容から書き起こし | ⚠️ | ✓ |   |   | 24 記事を Claude が本文を読んで 1-2 文の要約に手書き書き換え。fallback 排除し SEO/OGP で意味のある文に差替え ✓ 2026-04-18 |
 | T9.5 | 画像素材の配置と参照パス修正 | ✅ | ✓ |   |   | 方針変更: Astro が MD 内の相対画像を処理しないため `public/images/`（親 repo public）に配置。MD 内の `/images/...` 絶対参照はそのまま維持。46 画像配置、build で `dist/images/` に正常コピー確認 ✓ 2026-04-18 |
-| T9.6 | 数式対応（`remark-math` + `rehype-katex`） | ✅ |   | ✓ |   | 該当 1 記事（`20170930-83af6c1d83bb.md`）のために導入判断。`katex.min.css` の読み込みも必要。コストと効果を踏まえて optional |
+| T9.6 | 数式対応（`remark-math` + `rehype-katex`） | ✅ |   | ✓ |   | **見送り**: インベントリ上 `$` 検出があった記事（`20170930-83af6c1d83bb.md`）は shell プロンプト（`$command`）の誤検出で、実データに数式なし。将来数式記事を書く時点で再評価 |
 | T9.7 | ADR-008 + ルール更新 | ✅ |   |   |   | `docs/adr/008-markdown-directive-support.md` 新設。`.claude/rules/content-management.md` にサポート記法一覧と記事執筆ルールを追記 |
 
 ### 並列化方針
