@@ -3,6 +3,8 @@ import react from "@astrojs/react";
 import mdx from "@astrojs/mdx";
 import tailwindcss from "@tailwindcss/vite";
 import remarkGfm from "remark-gfm";
+import remarkDirective from "remark-directive";
+import remarkZennQiitaDirectives from "./src/lib/markdown/directives";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 
@@ -18,7 +20,7 @@ export default defineConfig({
     defaultStrategy: "viewport",
   },
   markdown: {
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [remarkGfm, remarkDirective, remarkZennQiitaDirectives],
     rehypePlugins: [
       rehypeSlug,
       [
