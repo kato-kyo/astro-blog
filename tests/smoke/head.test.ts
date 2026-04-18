@@ -2,7 +2,7 @@
  * 記事 HTML の `<head>` 要素に関するスモークテスト（requirements.md §7.2）
  *
  * 検証対象:
- *   - OGP タグ（`og:title`, `og:description`）— **T3.3 未実装のため現時点は skip**
+ *   - OGP タグ（`og:title`, `og:description`, `og:type=article`, `og:url`）
  *   - ダークモード初期化スクリプト（`document.documentElement.classList.add("dark")` を含む）
  *
  * 備考:
@@ -28,16 +28,17 @@ describe("smoke: article <head> (§7.2)", () => {
     expect(fileExists(TARGET_POST)).toBe(true);
   });
 
-  // TODO(T3.3): OGP / メタタグ生成タスク完了後、`it.skip` を `it` に戻す。
-  //   - `og:title` / `og:description` が `<head>` 内の `<meta property="og:*">` に出力されていること
-  //   - OGP 画像（`og:image`）や `twitter:card` まで拡張するかは T3.3 の設計に従う
-  it.skip("記事 HTML の <head> に og:title / og:description が含まれる（T3.3 完了後に有効化）", () => {
+  it("記事 HTML の <head> に og:title / og:description / og:type=article / og:url が含まれる", () => {
     const html = readDistFile(TARGET_POST);
     const $ = load(html);
     const ogTitle = $('head meta[property="og:title"]').attr("content");
     const ogDesc = $('head meta[property="og:description"]').attr("content");
+    const ogType = $('head meta[property="og:type"]').attr("content");
+    const ogUrl = $('head meta[property="og:url"]').attr("content");
     expect(ogTitle).toBeTruthy();
     expect(ogDesc).toBeTruthy();
+    expect(ogType).toBe("article");
+    expect(ogUrl).toBeTruthy();
   });
 
   it("記事 HTML の <head> にダークモード初期化スクリプトが含まれる", () => {
