@@ -55,3 +55,8 @@ jobs:
 
       - name: Build (astro build)
         run: pnpm build
+
+      # ビルド成果物 `dist/` を再利用し、スモーク観点（§7.2）を検証する。
+      # 直前の build ステップで生成された dist/ をそのまま使うため `test:smoke:only` を利用。
+      - name: Smoke tests (dist/ verification)
+        run: pnpm test:smoke:only
