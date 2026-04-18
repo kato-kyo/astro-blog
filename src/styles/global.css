@@ -100,6 +100,8 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   line-height: 1.65;
+  /* ダークモード切替時の軽い色遷移（prefers-reduced-motion で自動抑止される） */
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 /* Classic link styling: 青 + 下線常時 (GP 慣習) */
