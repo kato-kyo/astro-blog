@@ -106,7 +106,7 @@ merge 順序の調整と統合修正。
 
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
-| T4.1 | Pagefind 全文検索（モーダル + index 生成） | ✅ |   | ✓ |   | `pagefind` 依存追加。他 D タスクと同時実行しない |
+| T4.1 | Pagefind 全文検索（モーダル + index 生成） | ✅ |   | ✓ |   | pagefind@1.5.2、自作 React モーダル（client:idle、Ctrl+K/Esc）、build script に索引生成連結、smoke test 4 件追加 ✓ 2026-04-18 |
 
 **並列化方針**: 依存追加を伴うため、他の D タスクがない時期に単独 agent で実施。モーダル UI は React island。
 
