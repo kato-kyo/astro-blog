@@ -139,7 +139,7 @@ merge 順序の調整と統合修正。
 | ID | タスク | 並列判定 | F | D | I | 備考 |
 |----|--------|:---:|:-:|:-:|:-:|------|
 | T7.1 | `.env.example` 作成 | ✅ |   |   |   | `PUBLIC_APP_ENV` / `PUBLIC_SITE_URL` + コメント付き将来用プレースホルダー ✓ 2026-04-18 |
-| T7.2 | content private repo 作成 + submodule 化（ADR-002, ADR-003） | ❌ | ✓ | ✓ | ✓ | `astro-blog-content` private repo に初期コンテンツ投入 → `git submodule add ... content` → ci.yml/deploy.yml を `submodules: recursive` + `CONTENT_PAT` に切替 ✓ 2026-04-18 |
+| T7.2 | content private repo 作成 + submodule 化（ADR-002, ADR-003） | ❌ | ✓ | ✓ | ✓ | `astro-blog-content` に初期投入 → submodule mount を `content-src/` に、実データは `content-src/content/`、contentRoot を `./content-src/content` に設定 → ci.yml/deploy.yml を `submodules: recursive` + `CONTENT_PAT` に切替 ✓ 2026-04-18 |
 | T7.3 | Cloudflare Pages プロジェクト作成・環境変数設定 | ✅ |   |   |   | ダッシュボード作業。Git 連携自動デプロイは**無効化**（§8.6）。`PUBLIC_APP_ENV` を Production=production / Preview=preview |
 | T7.4 | カスタムドメイン設定 | ⚠️ |   |   | ✓ | T7.3 完了後。DNS / TLS 設定 |
 | T7.5 | GitHub Actions の secrets 登録（`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, 将来 `CONTENT_PAT`） | ✅ |   |   |   | リポジトリ側の作業のみ |

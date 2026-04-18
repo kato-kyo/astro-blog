@@ -3,15 +3,17 @@
  *
  * 参照ルール:
  * - Zod は必ず `astro/zod` から import（`zod` 単体パッケージではない）
- * - `content/` は git submodule（private repo）。未配置の開発環境では
- *   `CONTENT_ROOT` 環境変数で別ディレクトリを指す運用を想定する
+ * - `content-src/` は git submodule（private repo `astro-blog-content`）。
+ *   repo ルートに README 等のメタファイルを置けるよう、実コンテンツは
+ *   `content-src/content/` に集約してある。
+ * - 未配置の開発環境では `CONTENT_ROOT` 環境変数で別ディレクトリを指す運用を想定
  * - requirements.md §5 のスキーマに準拠
  */
 import { defineCollection, reference } from "astro:content";
 import { glob, file } from "astro/loaders";
 import { z } from "astro/zod";
 
-const contentRoot = process.env.CONTENT_ROOT?.trim() || "./content";
+const contentRoot = process.env.CONTENT_ROOT?.trim() || "./content-src/content";
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: `${contentRoot}/blog` }),

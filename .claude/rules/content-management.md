@@ -1,12 +1,14 @@
 ---
 paths:
-  - "content/**"
+  - "content-src/**"
   - "src/content.config.ts"
 ---
 
 # コンテンツ管理ルール
 
-`content/` は git submodule（private repo）。実データはここに集約する。
+`content-src/` は git submodule（private repo `astro-blog-content`）。
+repo ルートには README など repo メタファイルを置けるよう、**実データは
+`content-src/content/` 配下**に集約する。
 
 ローカル開発で submodule をまだ取得していない場合のみ、代替ディレクトリを
 `CONTENT_ROOT` 環境変数で指すことができる。その代替ディレクトリは public repo に
@@ -31,18 +33,20 @@ heroImage: string      # 任意
 ## ディレクトリ規約
 
 ```
-content/                       # git submodule (private)
-├── config/
-│   └── site.json              # サイトメタ情報（id: "default" の 1 エントリ）
-├── blog/
-│   └── my-first-post.md       # ファイル名 = スラッグ
-├── pages/
-│   ├── about.md               # 固定ページ
-│   └── services.md
-├── authors/
-│   └── authors.json           # 配列形式 [{ "id": "...", ... }]
-└── projects/                  # ポートフォリオ実績
-    └── *.md
+content-src/                   # git submodule (private astro-blog-content)
+├── README.md                  # repo メタファイル
+└── content/                   # 実データルート（Astro の contentRoot）
+    ├── config/
+    │   └── site.json          # サイトメタ情報（id: "default" の 1 エントリ）
+    ├── blog/
+    │   └── my-first-post.md   # ファイル名 = スラッグ
+    ├── pages/
+    │   ├── about.md           # 固定ページ
+    │   └── services.md
+    ├── authors/
+    │   └── authors.json       # 配列形式 [{ "id": "...", ... }]
+    └── projects/              # ポートフォリオ実績
+        └── *.md
 ```
 
 ## Content Collections 設定
@@ -51,7 +55,7 @@ content/                       # git submodule (private)
 // src/content.config.ts
 import { z } from "astro/zod";  // ← "zod" ではなく "astro/zod"
 
-const contentRoot = process.env.CONTENT_ROOT?.trim() || "./content";
+const contentRoot = process.env.CONTENT_ROOT?.trim() || "./content-src/content";
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/*.md", base: `${contentRoot}/blog` }),
@@ -60,7 +64,7 @@ const blog = defineCollection({
 ```
 
 - Zod は必ず `astro/zod` から import
-- `base` は `${contentRoot}/...`（デフォルト `./content/...`、submodule ディレクトリ）
+- `base` は `${contentRoot}/...`（デフォルト `./content-src/content/...`、submodule 配下の content/）
 - authors.json は配列形式（file() loader の仕様）
 
 ## Markdown / GFM
