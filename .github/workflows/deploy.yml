@@ -19,6 +19,9 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     name: Build & Deploy to Cloudflare Pages
@@ -45,11 +48,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ブランチに応じて PUBLIC_APP_ENV / PUBLIC_SITE_URL を切替（§8.3 環境別の振る舞い）
-      #
-      # PUBLIC_SITE_URL は sitemap / canonical / RSS / OGP の絶対 URL 生成に必須。
-      # 未設定だと astro.config.ts のフォールバック `https://example.com` が採用され致命的な不具合になるため、
-      # 明示的に環境ごとの URL を渡す。
+      # PUBLIC_SITE_URL 未設定だと astro.config.ts のフォールバック example.com が採用され
+      # sitemap/canonical/OGP が全て壊れるため、環境ごとに明示する。
       - name: Resolve environment
         id: env
         run: |
@@ -67,8 +67,6 @@ jobs:
           PUBLIC_SITE_URL: ${{ steps.env.outputs.public_site_url }}
         run: pnpm build
 
-      # wrangler pages deploy で dist/ を Cloudflare Pages にアップロード。
-      # Cloudflare Pages プロジェクト名: katokyo
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
