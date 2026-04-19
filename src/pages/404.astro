@@ -1,0 +1,24 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="ページが見つかりません"
+  description="お探しのページは存在しないか、移動・削除された可能性があります。"
+  noindex
+>
+  <section class="container-wide py-16 text-center">
+    <p class="text-6xl font-bold text-text-muted mb-4">404</p>
+    <h1 class="text-2xl font-bold mb-4">ページが見つかりません</h1>
+    <p class="text-text-secondary mb-8">
+      お探しのページは存在しないか、移動・削除された可能性があります。
+    </p>
+    <div class="flex flex-wrap justify-center gap-3">
+      <a href="/">トップへ戻る</a>
+      <span class="text-text-muted">·</span>
+      <a href="/blog/">記事一覧</a>
+      <span class="text-text-muted">·</span>
+      <a href="/about/">About</a>
+    </div>
+  </section>
+</BaseLayout>
