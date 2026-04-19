@@ -43,20 +43,21 @@ jobs:
           git submodule update --init --remote --recursive
 
       # Cloudflare Pages のデプロイ履歴で「どの content commit を反映したか」を追えるよう、
-      # content-src/ の HEAD hash とメッセージを wrangler に渡す
+      # content-src/ の HEAD hash とメッセージを wrangler に渡す。
+      # wrangler-action v3 は command をシェル展開しないため GH Actions 式表記で埋め込む。
+      # そのためメッセージはダブルクォート/バッククォート/$ を除去して安全化する
       - name: Resolve content commit metadata
         id: content
         working-directory: content-src
         run: |
+          MSG=$(git log -1 --pretty=%s)
+          MSG=${MSG//\"/}
+          MSG=${MSG//\`/}
+          MSG=${MSG//\$/}
           {
             echo "hash=$(git rev-parse HEAD)"
             echo "short=$(git rev-parse --short HEAD)"
-          } >> "$GITHUB_OUTPUT"
-          # クォートやパイプで壊さないため delimiter 形式でメッセージを書き出す
-          {
-            echo "message<<__CONTENT_MSG_EOF__"
-            git log -1 --pretty=%s
-            echo "__CONTENT_MSG_EOF__"
+            echo "message=$MSG"
           } >> "$GITHUB_OUTPUT"
 
       - name: Setup pnpm
@@ -92,10 +93,7 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
-        env:
-          CONTENT_COMMIT_HASH: ${{ steps.content.outputs.hash }}
-          CONTENT_COMMIT_MESSAGE: ${{ steps.content.outputs.message }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }} --commit-hash="$CONTENT_COMMIT_HASH" --commit-message="$CONTENT_COMMIT_MESSAGE"
+          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }} --commit-hash=${{ steps.content.outputs.hash }} --commit-message="${{ steps.content.outputs.message }}"
