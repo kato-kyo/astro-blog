@@ -19,12 +19,13 @@ repo ルートには README など repo メタファイルを置けるよう、*
 content 側に push するだけで本番反映まで完結する（§8.5 Option B'）。
 
 ```
-content push (main) → notify-deploy.yml → repository_dispatch(content-updated)
-                    → site repo Deploy → Cloudflare Pages 本番
+content push (main) → notify-deploy.yml → gh workflow run Deploy --ref main
+                    → site repo Deploy (main) → Cloudflare Pages 本番
 ```
 
 - content repo 側で編集して main に push すれば、site repo のポインタ更新は不要
 - site repo の Deploy は submodule を `--remote` で取得するため常に content main の HEAD をビルドする
+- site repo の default branch は `develop`（git-flow のため）。`repository_dispatch` は default branch でしか発火しない制約があるため、明示的に `workflow_dispatch` で `ref=main` を指定する
 - Cloudflare Pages のデプロイ履歴には `--commit-hash` / `--commit-message` を通して content 側の HEAD commit が記録される
 - PAT: content repo の `secrets.DEPLOY_DISPATCH_PAT`（fine-grained、site repo `astro-blog` の Actions: Read and write）
 
