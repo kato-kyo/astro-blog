@@ -419,7 +419,7 @@ flowchart TB
     SPR --> DPL
   end
 
-  CW -- "repository_dispatch: content-updated" --> DPL
+  CW -- "gh workflow run Deploy --ref main" --> DPL
   DPL -->|wrangler pages deploy| CF[Cloudflare Pages]
 ```
 
@@ -438,8 +438,10 @@ site repo の Deploy ワークフロー
 |-------|------|------------------|------|
 | `push: main` | site repo の main 更新 | main → production | コード / 設定変更の本番反映 |
 | `push: develop` | site repo の develop 更新 | develop → preview | プレビュー |
-| `repository_dispatch: content-updated` | content repo main 更新 | main（default branch）→ production | 記事の本番反映 |
-| `workflow_dispatch` | 手動 | 任意 | ロールバック（§8.8） |
+| `workflow_dispatch` (from content repo, `ref=main`) | content repo main 更新（content/notify-deploy.yml 経由） | main → production | 記事の本番反映 |
+| `workflow_dispatch` (manual) | 手動 | 任意 | ロールバック（§8.8） |
+
+> site repo の default branch は `develop`（feature/* の PR base が develop になるよう git-flow に合わせている）。`repository_dispatch` は default branch でしか発火しない仕様のため、content → site の通知には `workflow_dispatch` を `ref=main` 指定で使う。
 
 #### CI 最適化
 

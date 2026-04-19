@@ -12,9 +12,7 @@ on:
     branches:
       - main
       - develop
-  # content repo 側の push で発火（content → 自動本番反映フロー, §8.5）
-  repository_dispatch:
-    types: [content-updated]
+  # content repo 側の push で main を指定して発火される（content → 自動本番反映, §8.5 / notify-deploy.yml）
   workflow_dispatch:
 
 # 同じブランチの古い deploy はキャンセル（Free tier のビルド数節約）
