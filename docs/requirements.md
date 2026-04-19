@@ -401,17 +401,45 @@ main          ← prod デプロイ対象
 
 ### 8.5 CI/CD パイプライン
 
+site repo の push/PR に加え、**content repo 側の push** でも本番デプロイが走る（Option B'）。これにより記事執筆者は content に push するだけで本番反映まで完結する。
+
+```mermaid
+flowchart TB
+  subgraph content[content repo: astro-blog-content]
+    CP[push main]
+    CW[notify-deploy.yml]
+    CP --> CW
+  end
+
+  subgraph site[site repo: astro-blog]
+    SP[push main / develop]
+    SPR[PR to develop / main]
+    DPL[Deploy workflow]
+    SP --> DPL
+    SPR --> DPL
+  end
+
+  CW -- "repository_dispatch: content-updated" --> DPL
+  DPL -->|wrangler pages deploy| CF[Cloudflare Pages]
 ```
-PR 作成 / push
-  └─ GitHub Actions
-       ├─ checkout           # submodules: recursive + 読み取り専用 PAT
-       ├─ pnpm install       # キャッシュ有効化（node_modules + pnpm store）
-       ├─ pnpm check         # 型チェック
-       ├─ pnpm test          # ユニットテスト
-       ├─ pnpm build         # Astro ビルド（1回のみ。成果物を再利用）
-       ├─ スモークテスト       # 生成物検証（§7.2）
-       └─ wrangler pages deploy  # ブランチに応じて prod/preview
+
 ```
+site repo の Deploy ワークフロー
+  ├─ checkout site            # GITHUB_TOKEN
+  ├─ submodule update --remote # content main の HEAD を取得（pointer に追従しない）
+  ├─ content HEAD メタデータ抽出 # hash / short / message
+  ├─ pnpm install / check / test / build
+  └─ wrangler pages deploy --commit-hash=<content HEAD> --commit-message=<content HEAD message>
+```
+
+#### 発火条件
+
+| トリガ | 契機 | site branch（ref） | 用途 |
+|-------|------|------------------|------|
+| `push: main` | site repo の main 更新 | main → production | コード / 設定変更の本番反映 |
+| `push: develop` | site repo の develop 更新 | develop → preview | プレビュー |
+| `repository_dispatch: content-updated` | content repo main 更新 | main（default branch）→ production | 記事の本番反映 |
+| `workflow_dispatch` | 手動 | 任意 | ロールバック（§8.8） |
 
 #### CI 最適化
 
@@ -420,19 +448,27 @@ PR 作成 / push
 | concurrency | ブランチ単位で古い実行をキャンセル |
 | pnpm キャッシュ | `actions/setup-node` + pnpm store cache |
 | ビルド成果物再利用 | build は1回。smoke test と deploy は同じ `dist/` を使用 |
-| Build watch paths | `content/**`, `src/**`, `astro.config.ts`, `package.json` の変更時のみビルド |
 
 #### submodule 取得
 
 ```yaml
-- uses: actions/checkout@v4
-  with:
-    submodules: recursive
-    token: ${{ secrets.CONTENT_PAT }}  # private repo 読み取り専用 PAT
+- name: Checkout content submodule (remote HEAD)
+  run: |
+    git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
+    git submodule update --init --remote --recursive
 ```
 
-- `GITHUB_TOKEN` は同リポのみ有効なため、private submodule には**読み取り専用 PAT**（または GitHub App トークン）が必要
-- submodule は commit pin（浮動参照禁止）。CI で `git submodule status --recursive` を検証
+- `GITHUB_TOKEN` は同リポのみ有効なため、private submodule には**読み取り専用 PAT**（`CONTENT_PAT`）が必要
+- `--remote` により `.gitmodules` の `branch = main` に追従（site repo 側では pointer 更新を行わない）
+- site repo の submodule pointer は実質参考値。実際にビルドされた content commit は Cloudflare Pages のデプロイ履歴（`--commit-hash`）で追跡する
+
+#### PAT 一覧
+
+| Secret | 保存先 | 権限 | 用途 |
+|--------|--------|------|------|
+| `CONTENT_PAT` | site repo | content repo `Contents: Read` | submodule 取得 |
+| `DEPLOY_DISPATCH_PAT` | content repo | site repo `Actions: Read and write` | repository_dispatch 送信 |
+| `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` | site repo | Cloudflare Pages edit | wrangler deploy |
 
 ### 8.6 Cloudflare Pages 設定
 

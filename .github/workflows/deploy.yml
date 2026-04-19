@@ -12,6 +12,9 @@ on:
     branches:
       - main
       - develop
+  # content repo 側の push で発火（content → 自動本番反映フロー, §8.5）
+  repository_dispatch:
+    types: [content-updated]
   workflow_dispatch:
 
 # 同じブランチの古い deploy はキャンセル（Free tier のビルド数節約）
@@ -32,11 +35,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout content submodule
+      # content pointer は main repo 側では追従させず、常に content main の HEAD を --remote で取得する（§8.5 Option B'）
+      - name: Checkout content submodule (remote HEAD)
         run: |
           git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
           git config --global --add url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
-          git submodule update --init --recursive
+          git submodule update --init --remote --recursive
+
+      # Cloudflare Pages のデプロイ履歴で「どの content commit を反映したか」を追えるよう、
+      # content-src/ の HEAD hash とメッセージを wrangler に渡す。
+      # wrangler-action v3 は command をシェル展開しないため GH Actions 式表記で埋め込む。
+      # そのためメッセージはダブルクォート/バッククォート/$ を除去して安全化する
+      - name: Resolve content commit metadata
+        id: content
+        working-directory: content-src
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          MSG=${MSG//\"/}
+          MSG=${MSG//\`/}
+          MSG=${MSG//\$/}
+          {
+            echo "hash=$(git rev-parse HEAD)"
+            echo "short=$(git rev-parse --short HEAD)"
+            echo "message=$MSG"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -74,4 +96,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }}
+          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }} --commit-hash=${{ steps.content.outputs.hash }} --commit-message="${{ steps.content.outputs.message }}"
