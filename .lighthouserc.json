@@ -5,7 +5,6 @@
       "url": [
         "http://localhost/",
         "http://localhost/blog/",
-        "http://localhost/blog/hello-world/",
         "http://localhost/about/"
       ],
       "numberOfRuns": 3
