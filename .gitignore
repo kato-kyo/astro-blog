@@ -39,3 +39,6 @@ pnpm-debug.log*
 .idea/
 *.swp
 *.swo
+
+# Lighthouse CI 実行結果（ローカルのみ）
+.lighthouseci/

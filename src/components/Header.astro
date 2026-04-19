@@ -21,17 +21,21 @@ const site = await getSite();
     <a
       href="/"
       class="flex items-center gap-2 text-[1.1rem] font-bold tracking-tight text-header-text no-underline"
-      aria-label={`${site.title} トップへ`}
+      aria-label={`${site.authorJa} トップへ`}
     >
-      <img
-        src="/images/avatar.png"
-        alt=""
-        width="32"
-        height="32"
-        class="h-8 w-8 shrink-0 rounded-full object-cover"
-        decoding="async"
-        loading="eager"
-      />
+      <picture>
+        <source srcset="/images/avatar.webp" type="image/webp" />
+        <img
+          src="/images/avatar.png"
+          alt=""
+          width="32"
+          height="32"
+          class="h-8 w-8 shrink-0 rounded-full object-cover"
+          decoding="async"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </picture>
       <span>{site.authorJa}</span>
     </a>
     <nav aria-label="主要ナビゲーション" class="flex items-center flex-wrap gap-y-1 max-w-full">
