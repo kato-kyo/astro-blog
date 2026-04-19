@@ -12,6 +12,9 @@ on:
     branches:
       - main
       - develop
+  # content repo 側の push で発火（content → 自動本番反映フロー, §8.5）
+  repository_dispatch:
+    types: [content-updated]
   workflow_dispatch:
 
 # 同じブランチの古い deploy はキャンセル（Free tier のビルド数節約）
@@ -32,11 +35,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Checkout content submodule
+      # content pointer は main repo 側では追従させず、常に content main の HEAD を --remote で取得する（§8.5 Option B'）
+      - name: Checkout content submodule (remote HEAD)
         run: |
           git config --global url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "git@github.com:"
           git config --global --add url."https://x-access-token:${{ secrets.CONTENT_PAT }}@github.com/".insteadOf "https://github.com/"
-          git submodule update --init --recursive
+          git submodule update --init --remote --recursive
+
+      # Cloudflare Pages のデプロイ履歴で「どの content commit を反映したか」を追えるよう、
+      # content-src/ の HEAD hash とメッセージを wrangler に渡す
+      - name: Resolve content commit metadata
+        id: content
+        working-directory: content-src
+        run: |
+          {
+            echo "hash=$(git rev-parse HEAD)"
+            echo "short=$(git rev-parse --short HEAD)"
+          } >> "$GITHUB_OUTPUT"
+          # クォートやパイプで壊さないため delimiter 形式でメッセージを書き出す
+          {
+            echo "message<<__CONTENT_MSG_EOF__"
+            git log -1 --pretty=%s
+            echo "__CONTENT_MSG_EOF__"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -71,7 +92,10 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
+        env:
+          CONTENT_COMMIT_HASH: ${{ steps.content.outputs.hash }}
+          CONTENT_COMMIT_MESSAGE: ${{ steps.content.outputs.message }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }}
+          command: pages deploy dist --project-name=katokyo --branch=${{ github.ref_name }} --commit-hash="$CONTENT_COMMIT_HASH" --commit-message="$CONTENT_COMMIT_MESSAGE"

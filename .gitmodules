@@ -1,3 +1,4 @@
 [submodule "content-src"]
 	path = content-src
 	url = git@github.com:kato-kyo/astro-blog-content.git
+	branch = main
