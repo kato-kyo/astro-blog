@@ -206,7 +206,9 @@ export default function Search(_props: SearchProps) {
     if (event.target === event.currentTarget) setIsOpen(false);
   }, []);
 
-  if (!isOpen) return null;
+  // aria-controls="search-modal" のターゲット要素を常に DOM に存在させるため、
+  // 閉じている時も空の placeholder 要素を返す（id が resolvable でないと axe が invalid と判断する）
+  if (!isOpen) return <div id={MODAL_ID} hidden />;
 
   return (
     <div

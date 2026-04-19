@@ -110,12 +110,21 @@ const ogImage = image ? image.toString() : undefined;
     )}
     {type === "article" && author && <meta property="article:author" content={author} />}
 
+    {/* Google Fonts: render-blocking を避けるため async 読込 + 必要 weight のみ（400/700） */}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=JetBrains+Mono:wght@400&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=JetBrains+Mono:wght@400&display=swap"
+      />
+    </noscript>
 
     {/* FOUC 防止: design.md §6.1 準拠。localStorage/matchMedia を単一 try で包む */}
     <script is:inline>
