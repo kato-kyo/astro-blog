@@ -33,7 +33,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # content pointer は main repo 側では追従させず、常に content main の HEAD を --remote で取得する（§8.5 Option B'）
       - name: Checkout content submodule (remote HEAD)

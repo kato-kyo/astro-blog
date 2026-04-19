@@ -30,7 +30,7 @@ jobs:
       # メインリポは default GITHUB_TOKEN で取得し、private submodule は CONTENT_PAT で別途取得。
       # これにより CONTENT_PAT の権限を content repo のみに最小化できる。
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout content submodule
         run: |
